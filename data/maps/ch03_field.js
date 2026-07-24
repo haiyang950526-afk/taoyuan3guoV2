@@ -4,7 +4,7 @@ var MAPS = typeof MAPS !== "undefined" ? MAPS : {};
 MAPS["ch03_field"] = {
   name: "许都野外",
   grid: [
-    "RRRRRRRRRRRGGRRRRRRRRRRR",
+    "RRRRRRRRR##GG##RRRRRRRRR",
     "R.........,,...........R",
     "R..T......,,.....T.....R",
     "R.........,,...........R",

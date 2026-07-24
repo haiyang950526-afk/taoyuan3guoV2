@@ -4,7 +4,7 @@ var MAPS = typeof MAPS !== "undefined" ? MAPS : {};
 MAPS["ch01_field"] = {
   name: "郯城野外",
   grid: [
-    "RRRRRRRRRRRGGRRRRRRRRRRR",
+    "RRRRRRRRR##GG##RRRRRRRRR",
     "R...T.....,,......T....R",
     "R..T......,,..T........R",
     "R........,,........T...R",

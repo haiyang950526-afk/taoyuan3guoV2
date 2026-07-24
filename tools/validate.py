@@ -143,11 +143,16 @@ def parse_map(path):
     facilities = re.findall(r'facility:\s*"(\w+)"', src)
     minigames = re.findall(r'minigame:\s*"(\w+)"', src)
     escape_penalties = re.findall(r'penalty:\s*"([^"]+)"', src)
+    # 条件地块覆盖（tileOverrides）：{(x, y): ch}，条件地块按 ch 的通行性计
+    overrides = {}
+    for m in re.finditer(r'\{\s*x:\s*(\d+),\s*y:\s*(\d+),\s*ch:\s*"([^"]+)",\s*if:', src):
+        overrides[(int(m.group(1)), int(m.group(2)))] = m.group(3)
     return {"key": key, "grid": grid, "npcs": npcs, "transitions": transitions,
             "triggers": triggers, "chests": chests, "shops": shops,
             "bosses": bosses, "battles": battles, "says": says,
             "encounters": encounters, "facilities": facilities,
-            "minigames": minigames, "escape_penalties": escape_penalties}
+            "minigames": minigames, "escape_penalties": escape_penalties,
+            "overrides": overrides}
 
 # ---------- 主流程 ----------
 def main():
@@ -200,7 +205,7 @@ def main():
         def tile(x, y):
             if y < 0 or y >= h or x < 0 or x >= w:
                 return "#"
-            return m["grid"][y][x]
+            return m["overrides"].get((x, y), m["grid"][y][x])
 
         trans_src = set((t[0], t[1]) for t in m["transitions"])
         # 2. 传送点：源格可通行；目标图存在、落点可通行、不在目标图传送块上

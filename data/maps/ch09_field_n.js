@@ -4,7 +4,7 @@ var MAPS = typeof MAPS !== "undefined" ? MAPS : {};
 MAPS["ch09_field_n"] = {
   name: "荆南北野",
   grid: [
-    "RRRRRRRRRRGGRRRRRRRRRRRR",
+    "RRRRRRRR##GG##RRRRRRRRRR",
     "R.........,,...........R",
     "R..T......,,.....T.....R",
     "R.........,,,..........R",
@@ -15,7 +15,7 @@ MAPS["ch09_field_n"] = {
     "R.....T........,,......R",
     "R..............,,......R",
     "R..T...........,,...T..R",
-    "RRRRRRRRRRGGRRRRRRRRRRRR",
+    "RRRRRRRR##GG##RRRRRRRRRR",
   ],
   encounterTiles: ["."],
   encounterRate: 0.11,

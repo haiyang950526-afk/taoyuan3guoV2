@@ -113,6 +113,10 @@ function mapDef() { return MAPS[S.map]; }
 function tileAt(x, y) {
   const g = mapDef().grid;
   if (y < 0 || y >= g.length || x < 0 || x >= g[y].length) return "#";
+  // 条件地块覆盖（tileOverrides: [{x, y, ch, if, else?}]）：
+  // 条件成立显示 ch（如藏宝洞口），否则显示 else 或原格——用于"剧情触发后才出现"的地形
+  const ov = mapDef().tileOverrides && mapDef().tileOverrides.find(o => o.x === x && o.y === y);
+  if (ov) return evalCond(ov.if) ? ov.ch : (ov.else || g[y][x]);
   return g[y][x];
 }
 function npcVisible(n) {
@@ -138,6 +142,8 @@ function warpTo(mapKey, x, y) {
   S.map = mapKey; S.px = x; S.py = y;
   S.steps = 99;
   S.moving = null;
+  // 传送后锁定：松开方向键前不再移动，防止出城门时长按方向被直接带回城（城门循环）
+  S.warpLock = true;
   hud();
 }
 
@@ -227,6 +233,11 @@ function stepLogic() {
     afterStep();
   }
   if (S.moving) return;
+  // 传送后锁定：松开方向键/摇杆前不移动（见 warpTo）
+  if (S.warpLock) {
+    if (!S.held.x && !S.held.y) S.warpLock = false;
+    return;
+  }
   if (!S.held.x && !S.held.y) return;
   if (performance.now() - S.lastStep < 140) return;
   S.lastStep = performance.now();

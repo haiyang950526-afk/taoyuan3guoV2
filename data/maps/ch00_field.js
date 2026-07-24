@@ -21,7 +21,12 @@ MAPS["ch00_field"] = {
     "R..T.......T....,...T..R",
     "R....T..........,WW....R",
     "R..............,WW.....R",
-    "RRCCRRRRRRGGRRRRRRRRRRRR",
+    "RRRRRRRRRRGGRRRRRRRRRRRR",
+  ],
+  // 藏宝洞口（樗蒲首次全白后才发现）：平时显示山石 R，条件成立才变为洞口 C
+  tileOverrides: [
+    { x: 2, y: 17, ch: "C", if: { flag: "tavern_clue", exists: true } },
+    { x: 3, y: 17, ch: "C", if: { flag: "tavern_clue", exists: true } },
   ],
   encounterTiles: ["."],
   encounterRate: 0.12,

@@ -4,7 +4,7 @@ var MAPS = typeof MAPS !== "undefined" ? MAPS : {};
 MAPS["ch02_huaishui"] = {
   name: "淮水渡口",
   grid: [
-    "RRRRRRRRRRRGGRRRRRRRRRRR",
+    "RRRRRRRRR##GG##RRRRRRRRR",
     "R..........,,..........R",
     "R..T.......,,.....T....R",
     "R..........,,..........R",
@@ -23,7 +23,7 @@ MAPS["ch02_huaishui"] = {
   npcs: [],
   chests: [],
   triggers: (function () {
-    // 张辽来袭（演出战：撑 5 回合即过关）——辕门射戟后、失下邳前触发一次
+    // 张辽来袭（演出战：撑 5 回合即过关）——辕门射戟后、张飞盗马吕布反目触发一次
     // 覆盖大路及渡口木板的所有进路，防止绕行漏触发
     var liao = [{ battle: "ch02_zhangliao",
       onWin: [{ say: "ch02.lostXiapi" }, { set: { q2: "lost" } },

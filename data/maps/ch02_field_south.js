@@ -4,7 +4,7 @@ var MAPS = typeof MAPS !== "undefined" ? MAPS : {};
 MAPS["ch02_field_south"] = {
   name: "下邳郊野",
   grid: [
-    "RRRRRRRRRRGGRRRRRRRRRRRR",
+    "RRRRRRRR##GG##RRRRRRRRRR",
     "R.........,,...........R",
     "R..T......,,.....T.....R",
     "R.........,,,..........R",
@@ -21,7 +21,7 @@ MAPS["ch02_field_south"] = {
     "R..............,,,.....R",
     "R....T..........,,,....R",
     "R...............,,,....R",
-    "RRRRRRRRRRRRRRRGGRRRRRRR",
+    "RRRRRRRRRRRRR##GG##RRRRR",
   ],
   encounterTiles: ["."],
   encounterRate: 0.11,
