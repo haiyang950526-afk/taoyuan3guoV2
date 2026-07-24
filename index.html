@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>桃园三国 · 徐州篇</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation; }
+  html, body { height: 100%; background: #0d1120; color: #e8ecf4;
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; overflow: hidden; }
+  /* 纵向三段布局：HUD / 画布 / 中部(对话·战斗UI) / 底部按键，互不重叠 */
+  #app { height: 100%; height: 100dvh; display: flex; flex-direction: column; align-items: center; }
+  #hud { flex: 0 0 auto; width: 100%; max-width: 520px; display: flex; justify-content: space-between;
+    padding: 8px 12px; font-size: 13px; color: #aab2c5; }
+  #hud-quest { color: #ffd166; font-size: 12px; max-width: 55%; text-align: right; }
+  #stage { flex: 0 0 auto; }
+  canvas { display: block; border-radius: 10px; background: #000; }
+  /* 中部弹性区：对话框与战斗 UI 放在画布和按键之间 */
+  #mid { flex: 1 1 auto; width: 100%; min-height: 150px; display: flex;
+    flex-direction: column; justify-content: flex-end; align-items: center;
+    overflow: hidden; padding: 6px 0; }
+  #toast { position: fixed; top: 14%; left: 50%; transform: translateX(-50%);
+    background: rgba(20,28,48,.95); border: 1px solid #4f8cff; padding: 10px 22px;
+    border-radius: 10px; font-size: 14px; opacity: 0; transition: opacity .25s;
+    pointer-events: none; z-index: 99; }
+  #toast.show { opacity: 1; }
+
+  /* 对话框（中部区内，贴按键上方；有头像时左侧显示） */
+  #dialog { flex: 0 0 auto; width: min(92vw, 480px); margin-bottom: 4px;
+    background: rgba(16,22,40,.96); border: 2px solid #4a5a88;
+    border-radius: 12px; padding: 12px 14px; font-size: 16px; line-height: 1.7;
+    display: none; cursor: pointer; user-select: none; position: relative;
+    align-items: center; gap: 12px; }
+  #dialog.show { display: flex; }
+  #dialog-face { width: 72px; height: 84px; flex: 0 0 auto; display: none;
+    image-rendering: pixelated; background: rgba(36,48,79,.5);
+    border: 1px solid #3a4a78; border-radius: 8px; }
+  #dialog-text { flex: 1 1 auto; }
+  #dialog::after { content: "▼"; position: absolute; right: 12px; bottom: 6px;
+    font-size: 10px; color: #4f8cff; }
+
+  /* 章节通关插画（全屏遮罩，点击继续） */
+  #illust { position: fixed; inset: 0; background: rgba(6,8,16,.94);
+    display: none; flex-direction: column; align-items: center;
+    justify-content: center; z-index: 20; cursor: pointer; user-select: none; }
+  #illust.show { display: flex; }
+  #illust-img { width: min(92vw, 480px); image-rendering: pixelated;
+    border: 2px solid #4a5a88; border-radius: 10px; }
+  #illust-cap { margin-top: 14px; font-size: 17px; color: #ffd166; letter-spacing: 2px; }
+  #illust-hint { margin-top: 10px; font-size: 12px; color: #5f6a85; }
+
+  /* 通用面板 */
+  #panel { position: fixed; inset: 0; background: rgba(8,11,22,.8); display: none;
+    align-items: center; justify-content: center; }
+  #panel.show { display: flex; }
+  #panel-box { width: min(92vw, 420px); max-height: 76vh; overflow-y: auto;
+    background: #141c30; border: 2px solid #4a5a88; border-radius: 14px; padding: 18px; }
+  #panel-title { font-size: 18px; text-align: center; margin-bottom: 12px; color: #ffd166; }
+  .pline { font-size: 14px; color: #c6cde0; padding: 6px 2px; line-height: 1.5; }
+  #panel-box button, #battle-cmd button, #scr-title-box button {
+    display: block; width: 100%; margin-top: 8px; padding: 12px; font-size: 15px;
+    border: 1px solid #3a4a78; border-radius: 10px; background: #24304f; color: #e8ecf4; }
+  #panel-box button:active, #battle-cmd button:active { background: #31427a; }
+  button.ghost { background: #1a2238 !important; color: #8a93a8 !important; }
+
+  /* 战斗 UI（中部区内，高度受限、指令列表内部滚动） */
+  #battle-ui { flex: 0 1 auto; width: min(92vw, 480px); max-height: 100%;
+    display: none; flex-direction: column; }
+  #battle-ui.show { display: flex; }
+  #battle-log { flex: 0 0 auto; background: rgba(16,22,40,.96); border: 2px solid #6a3a3a;
+    border-radius: 10px; padding: 10px 14px; font-size: 13px; line-height: 1.6;
+    height: 84px; overflow-y: auto; margin-bottom: 8px; }
+  #battle-cmd { flex: 0 1 auto; min-height: 0; overflow-y: auto;
+    background: rgba(16,22,40,.96); border: 2px solid #4a5a88;
+    border-radius: 10px; padding: 10px; }
+
+  /* 十字键（贴屏幕底部，含安全区） */
+  #dpad { flex: 0 0 auto; width: 100%; max-width: 520px; display: none;
+    justify-content: space-between; align-items: flex-end;
+    padding: 4px 14px calc(6px + env(safe-area-inset-bottom)); }
+  #dpad.show { display: flex; }
+  .pad-cluster { display: grid; grid-template-areas: ". u ." "l . r" ". d .";
+    gap: 5px; }
+  .pad-btn { width: 52px; height: 52px; border-radius: 12px; border: 1px solid #3a4a78;
+    background: rgba(36,48,79,.85); color: #e8ecf4; font-size: 20px; user-select: none; }
+  .pad-btn:active { background: #31427a; }
+  #pad-up { grid-area: u; } #pad-down { grid-area: d; }
+  #pad-left { grid-area: l; } #pad-right { grid-area: r; }
+  .ab-cluster { display: flex; gap: 12px; align-items: center; }
+  #pad-a, #pad-b { width: 58px; height: 58px; border-radius: 50%; font-size: 18px;
+    border: 1px solid #3a4a78; background: rgba(36,48,79,.85); color: #e8ecf4; }
+  #pad-a { background: rgba(58,110,60,.85); }
+  #pad-b { background: rgba(110,58,58,.85); }
+
+  /* 标题页 */
+  #scr-title { position: fixed; inset: 0; background: #0d1120; display: none;
+    align-items: center; justify-content: center; z-index: 10; }
+  #scr-title.show { display: flex; }
+  #scr-title-box { width: min(88vw, 380px); text-align: center; }
+  #scr-title-box h1 { font-size: 34px; letter-spacing: 8px; margin-bottom: 6px; color: #ffd166; }
+  #scr-title-box .sub { color: #8a93a8; font-size: 13px; margin-bottom: 34px; }
+  #scr-title-box .hint { margin-top: 26px; font-size: 12px; color: #5f6a85; line-height: 1.9; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="hud">
+    <span id="hud-map">徐州城</span>
+    <span id="hud-gold">300 金</span>
+    <span id="hud-quest"></span>
+  </div>
+  <div id="stage"><canvas id="cv"></canvas></div>
+  <div id="mid">
+    <div id="dialog"><img id="dialog-face" alt=""><span id="dialog-text"></span></div>
+    <div id="battle-ui">
+      <div id="battle-log"></div>
+      <div id="battle-cmd"></div>
+    </div>
+  </div>
+  <div id="dpad">
+    <div class="pad-cluster">
+      <button class="pad-btn" id="pad-up">▲</button>
+      <button class="pad-btn" id="pad-left">◀</button>
+      <button class="pad-btn" id="pad-right">▶</button>
+      <button class="pad-btn" id="pad-down">▼</button>
+    </div>
+    <div class="ab-cluster">
+      <button id="pad-b">B</button>
+      <button id="pad-a">A</button>
+    </div>
+  </div>
+</div>
+
+<div id="panel"><div id="panel-box">
+  <div id="panel-title"></div>
+  <div id="panel-body"></div>
+</div></div>
+
+<div id="toast"></div>
+
+<div id="illust">
+  <img id="illust-img" alt="">
+  <div id="illust-cap"></div>
+  <div id="illust-hint">点击继续</div>
+</div>
+
+<div id="scr-title"><div id="scr-title-box">
+  <h1>桃园三国</h1>
+  <div class="sub">全十一章 · 桃园三国（数据存电脑服务端）</div>
+  <button id="btn-new">新的征途</button>
+  <button id="btn-load" class="ghost">继续征途（读档）</button>
+  <div class="hint">触屏：十字键移动 · A 对话/确认 · B 菜单<br>
+  电脑：方向键/WASD 移动 · Enter/Z 确认 · Esc/X 菜单<br>
+  193 年徐州起兵 → 228 年星落五丈原，全主线可通</div>
+</div></div>
+
+<script src="data/text.js"></script>
+<script src="data/items.js"></script>
+<script src="data/skills.js"></script>
+<script src="data/heroes.js"></script>
+<script src="data/enemies.js"></script>
+<script src="data/maps/ch00_city.js"></script>
+<script src="data/maps/ch00_field.js"></script>
+<script src="data/maps/ch00_cave.js"></script>
+<script src="data/maps/ch01_field.js"></script>
+<script src="data/maps/ch01_tancheng.js"></script>
+<script src="data/maps/ch01_sishui.js"></script>
+<script src="data/maps/ch02_field_east.js"></script>
+<script src="data/maps/ch02_xiaopei.js"></script>
+<script src="data/maps/ch02_field_south.js"></script>
+<script src="data/maps/ch02_xiapi.js"></script>
+<script src="data/maps/ch02_huaishui.js"></script>
+<script src="data/maps/ch03_xudu.js"></script>
+<script src="data/maps/ch03_field.js"></script>
+<script src="data/maps/ch03_hunt.js"></script>
+<script src="data/maps/ch04_tushan.js"></script>
+<script src="data/maps/ch04_baima.js"></script>
+<script src="data/maps/ch04_mangdang.js"></script>
+<script src="data/maps/ch05_dongling.js"></script>
+<script src="data/maps/ch05_luoyang.js"></script>
+<script src="data/maps/ch05_sishui.js"></script>
+<script src="data/maps/ch05_xingyang.js"></script>
+<script src="data/maps/ch05_ferry.js"></script>
+<script src="data/maps/ch05_woniu.js"></script>
+<script src="data/maps/ch05_gucheng.js"></script>
+<script src="data/maps/ch06_xinye.js"></script>
+<script src="data/maps/ch06_field.js"></script>
+<script src="data/maps/ch06_xiangyang.js"></script>
+<script src="data/maps/ch06_tanxi.js"></script>
+<script src="data/maps/ch06_longzhong.js"></script>
+<script src="data/maps/ch07_bowang.js"></script>
+<script src="data/maps/ch07_changban.js"></script>
+<script src="data/maps/ch07_hanjin.js"></script>
+<script src="data/maps/ch08_chaisang.js"></script>
+<script src="data/maps/ch08_shuizhai.js"></script>
+<script src="data/maps/ch08_xiakou.js"></script>
+<script src="data/maps/ch08_huarong.js"></script>
+<script src="data/maps/ch09_guiyang.js"></script>
+<script src="data/maps/ch09_wuling.js"></script>
+<script src="data/maps/ch09_changsha.js"></script>
+<script src="data/maps/ch09_lingling.js"></script>
+<script src="data/maps/ch09_field_n.js"></script>
+<script src="data/maps/ch09_field_s.js"></script>
+<script src="data/maps/ch10_fucheng.js"></script>
+<script src="data/maps/ch10_field.js"></script>
+<script src="data/maps/ch10_luocheng.js"></script>
+<script src="data/maps/ch10_luofeng.js"></script>
+<script src="data/maps/ch10_mianzhu.js"></script>
+<script src="data/maps/ch10_chengdu.js"></script>
+<script src="data/maps/ch10_dingjun.js"></script>
+<script src="data/maps/ch11_hanzhong.js"></script>
+<script src="data/maps/ch11_tianshui.js"></script>
+<script src="data/maps/ch11_jieting.js"></script>
+<script src="data/maps/ch11_qishan.js"></script>
+<script src="data/maps/ch11_wuzhang.js"></script>
+<script src="data/chapters.js"></script>
+<script src="data/formations.js"></script>
+<script src="data/portraits.js"></script>
+<script src="engine/formulas.js"></script>
+<script src="engine/save.js"></script>
+<script src="engine/core.js"></script>
+<script src="engine/sprites.js"></script>
+<script src="engine/map.js"></script>
+<script src="engine/battle.js"></script>
+<script src="engine/ui.js"></script>
+<script src="engine/minigame.js"></script>
+</body>
+</html>

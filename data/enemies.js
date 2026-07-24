@@ -1,0 +1,337 @@
+// 数据 · 敌方单位 + 战斗编组
+// 数值配比假设（03 文档原则）：
+//   - 野外小怪 2-3 回合清完：同级满装猛将普攻 ≈ 小怪 HP 的 35-45%。
+//     以推荐等级中位估算（如第一章 Lv6 关羽攻≈22+铁剑6=28，曹兵 HP60，
+//     28-8/2≈24 ≈ 40%），2-3 人集火即 1-2 回合一只。
+//   - Boss 8-12 回合：于禁 HP400，Lv8 三人队每回合输出约 80-100 → 5-7 回合，
+//     含"整肃"加防与补给后落在 8 回合上下；纪灵 HP700 对 Lv11 四人队同理。
+//   - 敌人 atk 按"打同级角色一下 ≈ 其 HP 的 8-12%"配，保证 1-2 次补给可过。
+// ai 类型：brute 普攻血最少 / archer 优先射防最低 / strategist 谋士（于禁：逢3回合用整肃）
+//          heavy 重单体（纪灵：隔回合 1.6 倍重击）
+// lv 用于经验结算（小怪 lv×8，精英 ×1.5，Boss lv×20）。
+// drops 掉落率基线（±2 个百分点内）：普通怪 草药15%/金疮药8%(一章起)/当代装备3%；
+//   精英 消耗品20%/装备5%；Boss 保底 rate:1。第一章金钱略上调以支撑铁代装备+掉落经济
+//   （经济校验见 tools/test_headless.js：单场掉落期望 ≤ 金钱期望 25%）。
+"use strict";
+
+const ENEMIES = {
+  // —— 序章 · 黄巾（lv1-3） ——
+  "黄巾贼":   { lv: 1, hp: 30,  atk: 8,  int: 3,  def: 4,  spd: 5,  luck: 4, gold: [20, 40],   color: "#d8b93a", ai: "brute",
+                drops: [{ item: "草药", rate: 0.15 }, { item: "铜剑", rate: 0.03 }] },
+  "黄巾弓手": { lv: 2, hp: 24,  atk: 11, int: 3,  def: 3,  spd: 8,  luck: 6, gold: [25, 45],   color: "#d88a3a", ai: "archer",
+                drops: [{ item: "草药", rate: 0.15 }, { item: "布衣", rate: 0.03 }] },
+  "黄巾头目": { lv: 3, hp: 130, atk: 14, int: 4,  def: 6,  spd: 7,  luck: 6, gold: [300, 300], color: "#c0392b", ai: "brute", boss: true,
+                drops: [{ item: "皮甲", rate: 1 }] },
+
+  // —— 第一章 · 曹军（lv4-9） ——
+  "曹兵":     { lv: 4, hp: 60,  atk: 14, int: 4,  def: 8,  spd: 6,  luck: 5, gold: [50, 80],   color: "#8a93a8", ai: "brute",
+                drops: [{ item: "草药", rate: 0.15 }, { item: "金疮药", rate: 0.08 }, { item: "皮甲", rate: 0.03 }] },
+  "曹军弓手": { lv: 5, hp: 50,  atk: 18, int: 5,  def: 6,  spd: 10, luck: 8, gold: [60, 90],   color: "#6a8ab8", ai: "archer",
+                drops: [{ item: "草药", rate: 0.15 }, { item: "金疮药", rate: 0.08 }, { item: "皮盾", rate: 0.03 }] },
+  "曹军什长": { lv: 7, hp: 110, atk: 20, int: 6,  def: 12, spd: 8,  luck: 6, gold: [90, 130],  color: "#5a6a88", ai: "brute", elite: true,
+                drops: [{ item: "金疮药", rate: 0.20 }, { item: "铁甲", rate: 0.05 }] },
+  "于禁":     { lv: 9, hp: 400, atk: 24, int: 12, def: 14, spd: 10, luck: 8, gold: [800, 800], color: "#3a4a78", ai: "strategist", boss: true, skill: "zhengshu",
+                drops: [{ item: "铁甲", rate: 1 }] },
+
+  // —— 第二章 · 袁术军 / 吕布军（lv8-13） ——
+  "袁术兵":   { lv: 8,  hp: 90,  atk: 22, int: 5,  def: 12, spd: 8,  luck: 5, gold: [70, 110],  color: "#b08a3a", ai: "brute",
+                drops: [{ item: "草药", rate: 0.15 }, { item: "金疮药", rate: 0.08 }, { item: "钢剑", rate: 0.03 }] },
+  "袁术弓手": { lv: 9,  hp: 80,  atk: 26, int: 6,  def: 10, spd: 12, luck: 8, gold: [85, 130],  color: "#c09a4a", ai: "archer",
+                drops: [{ item: "草药", rate: 0.15 }, { item: "金疮药", rate: 0.08 }, { item: "钢甲", rate: 0.03 }] },
+  "纪灵":     { lv: 11, hp: 700, atk: 34, int: 8,  def: 18, spd: 11, luck: 8, gold: [1500, 1500], color: "#a03a2a", ai: "heavy", boss: true,
+                drops: [{ item: "钢甲", rate: 1 }],
+                // 多形态 schema（第十一章三段 Boss 用）：血量过阈值时切换
+                //   say 台词 / statsMult 属性倍率 / skills 技能表替换
+                phases: [{ hpBelow: 0.3, say: ["纪灵：喝啊——让尔等见识某家真本事！"],
+                           statsMult: { atk: 1.2 } }] },
+  // 张辽：演出战，数值不可胜（unbeatable 在编组上标记）；固定结算不掉落
+  "张辽":     { lv: 13, hp: 9999, atk: 56, int: 15, def: 30, spd: 16, luck: 12, gold: [0, 0],   color: "#4a2a5a", ai: "brute", boss: true,
+                drops: [] },
+
+  // —— 第三章 · 许都（lv12-15） ——
+  "曹军精锐": { lv: 12, hp: 150, atk: 30, int: 8,  def: 16, spd: 11, luck: 6, gold: [110, 160], color: "#6a7a9a", ai: "brute",
+                drops: [{ item: "草药", rate: 0.15 }, { item: "金疮药", rate: 0.08 }, { item: "钢剑", rate: 0.03 }] },
+  "曹军精骑": { lv: 13, hp: 130, atk: 34, int: 8,  def: 13, spd: 15, luck: 8, gold: [120, 170], color: "#5a6a8a", ai: "archer",
+                drops: [{ item: "草药", rate: 0.15 }, { item: "金疮药", rate: 0.08 }, { item: "钢甲", rate: 0.03 }] },
+  "曹军都伯": { lv: 15, hp: 220, atk: 36, int: 10, def: 20, spd: 12, luck: 8, gold: [180, 240], color: "#4a5a7a", ai: "brute", elite: true,
+                drops: [{ item: "金疮药", rate: 0.20 }, { item: "钢甲", rate: 0.05 }] },
+  "车胄先锋": { lv: 14, hp: 1000, atk: 38, int: 10, def: 22, spd: 13, luck: 8, gold: [2000, 2000], color: "#3a4a6a", ai: "brute", boss: true,
+                drops: [{ item: "钢甲", rate: 1 }] },
+
+  // —— 第四章 · 风云再散（lv16-18） ——
+  "曹军先锋": { lv: 16, hp: 220, atk: 40, int: 10, def: 20, spd: 13, luck: 7, gold: [160, 220], color: "#6a7a9a", ai: "brute",
+                drops: [{ item: "草药", rate: 0.15 }, { item: "金疮药", rate: 0.08 }, { item: "钢剑", rate: 0.03 }] },
+  "曹军虎卫": { lv: 17, hp: 280, atk: 44, int: 10, def: 24, spd: 13, luck: 8, gold: [220, 300], color: "#5a4a6a", ai: "brute", elite: true,
+                drops: [{ item: "金疮药", rate: 0.20 }, { item: "玄铁甲", rate: 0.05 }] },
+  "黄巾残党": { lv: 16, hp: 200, atk: 38, int: 8,  def: 18, spd: 12, luck: 6, gold: [150, 210], color: "#b8a03a", ai: "brute",
+                drops: [{ item: "草药", rate: 0.15 }, { item: "金疮药", rate: 0.08 }, { item: "钢剑", rate: 0.03 }] },
+  "车胄":     { lv: 17, hp: 1400, atk: 42, int: 12, def: 26, spd: 13, luck: 8, gold: [2600, 2600], color: "#2a3a5a", ai: "brute", boss: true,
+                drops: [{ item: "玄铁甲", rate: 1 }] },
+  "颜良":     { lv: 18, hp: 1800, atk: 52, int: 10, def: 24, spd: 14, luck: 9, gold: [3000, 3000], color: "#8a3a2a", ai: "heavy", boss: true,
+                drops: [{ item: "精钢剑", rate: 1 }] },
+  "文丑":     { lv: 18, hp: 1800, atk: 44, int: 10, def: 24, spd: 20, luck: 10, gold: [3000, 3000], color: "#8a5a2a", ai: "archer", boss: true,
+                drops: [{ item: "玉佩", rate: 1 }] },
+
+  // —— 第五章 · 五关与古城（lv20-24） ——
+  "东岭守军": { lv: 20, hp: 280, atk: 46, int: 10, def: 24, spd: 14, luck: 7, gold: [220, 300], color: "#7a6a5a", ai: "brute",
+                drops: [{ item: "金疮药", rate: 0.15 }, { item: "还魂丹", rate: 0.08 }, { item: "精钢剑", rate: 0.03 }] },
+  "洛阳守军": { lv: 21, hp: 300, atk: 48, int: 12, def: 26, spd: 14, luck: 7, gold: [240, 320], color: "#7a6a5a", ai: "brute",
+                drops: [{ item: "金疮药", rate: 0.15 }, { item: "还魂丹", rate: 0.08 }, { item: "玄铁甲", rate: 0.03 }] },
+  "汜水守军": { lv: 22, hp: 320, atk: 50, int: 12, def: 27, spd: 15, luck: 8, gold: [260, 340], color: "#7a6a5a", ai: "brute",
+                drops: [{ item: "金疮药", rate: 0.15 }, { item: "还魂丹", rate: 0.08 }, { item: "精钢剑", rate: 0.03 }] },
+  "荥阳守军": { lv: 23, hp: 340, atk: 52, int: 12, def: 28, spd: 15, luck: 8, gold: [280, 360], color: "#7a6a5a", ai: "brute",
+                drops: [{ item: "金疮药", rate: 0.15 }, { item: "还魂丹", rate: 0.08 }, { item: "玄铁甲", rate: 0.03 }] },
+  "孔秀":     { lv: 20, hp: 1500, atk: 48, int: 10, def: 26, spd: 14, luck: 8, gold: [2400, 2400], color: "#6a3a3a", ai: "brute", boss: true,
+                drops: [{ item: "精钢剑", rate: 1 }] },
+  "韩福":     { lv: 21, hp: 1800, atk: 50, int: 12, def: 27, spd: 14, luck: 8, gold: [2600, 2600], color: "#6a3a3a", ai: "brute", boss: true,
+                drops: [{ item: "玄铁甲", rate: 1 }] },
+  "卞喜":     { lv: 22, hp: 2000, atk: 52, int: 12, def: 28, spd: 15, luck: 9, gold: [2800, 2800], color: "#6a3a3a", ai: "heavy", boss: true,
+                drops: [{ item: "精钢剑", rate: 1 }] },
+  "王植":     { lv: 23, hp: 2200, atk: 54, int: 14, def: 29, spd: 15, luck: 9, gold: [3000, 3000], color: "#6a3a3a", ai: "strategist", boss: true, skill: "zhengshu",
+                drops: [{ item: "玄铁甲", rate: 1 }] },
+  "秦琪":     { lv: 24, hp: 2400, atk: 56, int: 12, def: 30, spd: 16, luck: 9, gold: [3200, 3200], color: "#6a3a3a", ai: "heavy", boss: true,
+                drops: [{ item: "玉佩", rate: 1 }] },
+  "裴元绍":   { lv: 24, hp: 2000, atk: 54, int: 10, def: 26, spd: 15, luck: 8, gold: [2800, 2800], color: "#8a6a2a", ai: "brute", boss: true,
+                drops: [{ item: "精钢剑", rate: 1 }] },
+  // 古城·张飞（误会）：演出战，兄弟对打 3 回合，不可胜
+  "张飞(误会)": { lv: 24, hp: 9999, atk: 58, int: 8, def: 30, spd: 17, luck: 10, gold: [0, 0], color: "#5c6478", ai: "heavy", boss: true,
+                drops: [] },
+
+  // —— 第六章 · 新野（lv25-28） ——
+  "新野匪徒": { lv: 25, hp: 360, atk: 56, int: 10, def: 28, spd: 15, luck: 7, gold: [300, 400], color: "#8a7a4a", ai: "brute",
+                drops: [{ item: "金疮药", rate: 0.15 }, { item: "还魂丹", rate: 0.08 }, { item: "精钢剑", rate: 0.03 }] },
+  "匪首张武": { lv: 26, hp: 1900, atk: 58, int: 10, def: 30, spd: 15, luck: 8, gold: [2200, 2200], color: "#7a4a2a", ai: "brute", boss: true,
+                drops: [{ item: "精钢剑", rate: 1 }] },
+  "匪首陈孙": { lv: 26, hp: 2000, atk: 60, int: 10, def: 30, spd: 16, luck: 8, gold: [2200, 2200], color: "#7a4a2a", ai: "brute", boss: true,
+                drops: [{ item: "玄铁甲", rate: 1 }] },
+  "匪首赵慈": { lv: 27, hp: 2100, atk: 62, int: 12, def: 32, spd: 16, luck: 8, gold: [2400, 2400], color: "#7a4a2a", ai: "heavy", boss: true,
+                drops: [{ item: "玉佩", rate: 1 }] },
+  "蔡瑁追兵": { lv: 27, hp: 2600, atk: 62, int: 12, def: 32, spd: 17, luck: 9, gold: [3000, 3000], color: "#4a3a5a", ai: "brute", boss: true,
+                drops: [{ item: "玄铁甲", rate: 1 }] },
+
+  // —— 第七章 · 博望与长坂（lv29-31） ——
+  "博望曹军": { lv: 29, hp: 420, atk: 64, int: 12, def: 32, spd: 16, luck: 8, gold: [380, 480], color: "#6a7a9a", ai: "brute",
+                drops: [{ item: "金疮药", rate: 0.15 }, { item: "还魂丹", rate: 0.08 }, { item: "精钢剑", rate: 0.03 }] },
+  "曹军残兵": { lv: 29, hp: 380, atk: 60, int: 12, def: 30, spd: 15, luck: 7, gold: [360, 460], color: "#7a8a9a", ai: "brute",
+                drops: [{ item: "金疮药", rate: 0.15 }, { item: "还魂丹", rate: 0.08 }, { item: "玄铁甲", rate: 0.03 }] },
+  "夏侯惇":   { lv: 30, hp: 3800, atk: 70, int: 14, def: 36, spd: 17, luck: 10, gold: [5000, 5000], color: "#3a2a4a", ai: "heavy", boss: true,
+                drops: [{ item: "精钢剑", rate: 1 }],
+                phases: [{ hpBelow: 0.4, say: ["夏侯惇：拔矢啖睛，何足道哉——杀！"], statsMult: { atk: 1.25 } }] },
+  "虎豹骑":   { lv: 31, hp: 3200, atk: 74, int: 12, def: 38, spd: 19, luck: 10, gold: [4200, 4200], color: "#2a3a4a", ai: "brute", boss: true,
+                drops: [{ item: "玄铁甲", rate: 1 }] },
+
+  // —— 第八章 · 赤壁（lv33-37） ——
+  "曹军水兵": { lv: 33, hp: 500, atk: 72, int: 12, def: 36, spd: 17, luck: 8, gold: [480, 600], color: "#4a6a8a", ai: "brute",
+                drops: [{ item: "金疮药", rate: 0.15 }, { item: "还魂丹", rate: 0.08 }, { item: "精钢剑", rate: 0.03 }] },
+  "水军校尉": { lv: 34, hp: 600, atk: 76, int: 14, def: 40, spd: 17, luck: 9, gold: [600, 750], color: "#3a5a7a", ai: "brute", elite: true,
+                drops: [{ item: "还魂丹", rate: 0.20 }, { item: "白银剑", rate: 0.05 }] },
+  "水师都督": { lv: 35, hp: 5000, atk: 80, int: 16, def: 42, spd: 18, luck: 10, gold: [6000, 6000], color: "#2a4a6a", ai: "strategist", boss: true, skill: "zhengshu",
+                drops: [{ item: "白银剑", rate: 1 }] },
+  "乌林残军": { lv: 34, hp: 550, atk: 74, int: 12, def: 38, spd: 16, luck: 8, gold: [520, 680], color: "#5a6a7a", ai: "brute",
+                drops: [{ item: "金疮药", rate: 0.15 }, { item: "还魂丹", rate: 0.08 }, { item: "白银铠", rate: 0.03 }] },
+  "华容曹兵": { lv: 35, hp: 580, atk: 76, int: 12, def: 40, spd: 17, luck: 8, gold: [560, 720], color: "#5a5a6a", ai: "brute",
+                drops: [{ item: "金疮药", rate: 0.15 }, { item: "还魂丹", rate: 0.08 }, { item: "白银剑", rate: 0.03 }] },
+  "曹操亲卫队": { lv: 37, hp: 6000, atk: 88, int: 16, def: 46, spd: 19, luck: 11, gold: [8000, 8000], color: "#3a2a3a", ai: "heavy", boss: true,
+                drops: [{ item: "白银铠", rate: 1 }] },
+
+  // —— 第九章 · 荆南四郡（lv37-40） ——
+  "荆南兵":   { lv: 37, hp: 640, atk: 82, int: 12, def: 42, spd: 18, luck: 8, gold: [640, 800], color: "#7a8a5a", ai: "brute",
+                drops: [{ item: "金疮药", rate: 0.15 }, { item: "还魂丹", rate: 0.08 }, { item: "白银剑", rate: 0.03 }] },
+  "荆南弓手": { lv: 38, hp: 600, atk: 88, int: 12, def: 40, spd: 20, luck: 10, gold: [680, 850], color: "#8a9a6a", ai: "archer",
+                drops: [{ item: "金疮药", rate: 0.15 }, { item: "还魂丹", rate: 0.08 }, { item: "白银铠", rate: 0.03 }] },
+  "赵范部将": { lv: 38, hp: 4200, atk: 88, int: 14, def: 44, spd: 19, luck: 9, gold: [5200, 5200], color: "#5a6a4a", ai: "brute", boss: true,
+                drops: [{ item: "白银剑", rate: 1 }] },
+  "金旋":     { lv: 39, hp: 4500, atk: 90, int: 12, def: 46, spd: 19, luck: 9, gold: [5400, 5400], color: "#6a5a3a", ai: "brute", boss: true,
+                drops: [{ item: "白银铠", rate: 1 }] },
+  "黄忠(敌)": { lv: 40, hp: 5800, atk: 96, int: 12, def: 44, spd: 22, luck: 14, gold: [6000, 6000], color: "#c8a03a", ai: "archer", boss: true,
+                drops: [{ item: "铁脊弓", rate: 1 }] },
+
+  // —— 第十章 · 西川风云（lv41-47） ——
+  "西川兵":   { lv: 41, hp: 720, atk: 92, int: 12, def: 46, spd: 19, luck: 8, gold: [760, 950], color: "#8a7a6a", ai: "brute",
+                drops: [{ item: "金疮药", rate: 0.15 }, { item: "还魂丹", rate: 0.08 }, { item: "白银剑", rate: 0.03 }] },
+  "蜀军弓手": { lv: 42, hp: 680, atk: 98, int: 12, def: 44, spd: 21, luck: 10, gold: [800, 1000], color: "#9a8a7a", ai: "archer",
+                drops: [{ item: "金疮药", rate: 0.15 }, { item: "还魂丹", rate: 0.08 }, { item: "白银铠", rate: 0.03 }] },
+  "蜀军名将": { lv: 44, hp: 900, atk: 104, int: 14, def: 52, spd: 20, luck: 10, gold: [1000, 1300], color: "#6a5a4a", ai: "brute", elite: true,
+                drops: [{ item: "还魂丹", rate: 0.20 }, { item: "龙泉剑", rate: 0.05 }] },
+  "雒城守军": { lv: 43, hp: 780, atk: 96, int: 12, def: 48, spd: 19, luck: 8, gold: [840, 1050], color: "#7a6a5a", ai: "brute",
+                drops: [{ item: "金疮药", rate: 0.15 }, { item: "还魂丹", rate: 0.08 }, { item: "白银铠", rate: 0.03 }] },
+  "落凤坡伏兵": { lv: 43, hp: 800, atk: 100, int: 12, def: 46, spd: 20, luck: 9, gold: [0, 0], color: "#4a3a3a", ai: "brute",
+                drops: [] },
+  "张任":     { lv: 45, hp: 7000, atk: 108, int: 16, def: 54, spd: 21, luck: 10, gold: [8000, 8000], color: "#3a3a4a", ai: "heavy", boss: true,
+                drops: [{ item: "龙泉剑", rate: 1 }] },
+  "马超(敌)": { lv: 46, hp: 7500, atk: 112, int: 12, def: 52, spd: 23, luck: 10, gold: [8000, 8000], color: "#d8d8e8", ai: "heavy", boss: true,
+                drops: [{ item: "龙鳞铠", rate: 1 }] },
+  "夏侯渊":   { lv: 47, hp: 8000, atk: 116, int: 14, def: 56, spd: 22, luck: 11, gold: [9000, 9000], color: "#4a3a2a", ai: "heavy", boss: true,
+                drops: [{ item: "龙泉剑", rate: 1 }] },
+  "张郃":     { lv: 47, hp: 8200, atk: 112, int: 16, def: 58, spd: 23, luck: 11, gold: [9000, 9000], color: "#3a4a3a", ai: "strategist", boss: true, skill: "zhengshu",
+                drops: [{ item: "龙鳞铠", rate: 1 }] },
+
+  // —— 第十一章 · 北伐（lv47-55） ——
+  "魏军先锋": { lv: 47, hp: 860, atk: 108, int: 14, def: 52, spd: 21, luck: 9, gold: [950, 1200], color: "#5a6a8a", ai: "brute",
+                drops: [{ item: "金疮药", rate: 0.15 }, { item: "还魂丹", rate: 0.08 }, { item: "龙泉剑", rate: 0.03 }] },
+  "魏军虎贲": { lv: 49, hp: 1000, atk: 116, int: 14, def: 58, spd: 22, luck: 10, gold: [1100, 1400], color: "#4a5a7a", ai: "brute", elite: true,
+                drops: [{ item: "还魂丹", rate: 0.20 }, { item: "龙鳞铠", rate: 0.05 }] },
+  "天水守军": { lv: 48, hp: 900, atk: 110, int: 14, def: 54, spd: 21, luck: 9, gold: [1000, 1250], color: "#6a7a8a", ai: "brute",
+                drops: [{ item: "金疮药", rate: 0.15 }, { item: "还魂丹", rate: 0.08 }, { item: "龙泉剑", rate: 0.03 }] },
+  "街亭魏军": { lv: 50, hp: 1050, atk: 120, int: 14, def: 58, spd: 22, luck: 10, gold: [0, 0], color: "#3a4a6a", ai: "brute",
+                drops: [] },
+  "姜维(敌)": { lv: 50, hp: 8500, atk: 118, int: 30, def: 56, spd: 24, luck: 12, gold: [10000, 10000], color: "#6ab8a8", ai: "strategist", boss: true, skill: "zhengshu",
+                drops: [{ item: "龙泉剑", rate: 1 }] },
+  "郭淮":     { lv: 51, hp: 9000, atk: 120, int: 16, def: 58, spd: 22, luck: 10, gold: [10000, 10000], color: "#4a4a5a", ai: "brute", boss: true,
+                drops: [{ item: "龙鳞铠", rate: 1 }] },
+  "孙礼":     { lv: 52, hp: 9200, atk: 122, int: 16, def: 60, spd: 23, luck: 10, gold: [10500, 10500], color: "#5a4a4a", ai: "heavy", boss: true,
+                drops: [{ item: "龙泉剑", rate: 1 }] },
+  "曹真":     { lv: 53, hp: 9500, atk: 126, int: 18, def: 62, spd: 23, luck: 11, gold: [11000, 11000], color: "#3a3a5a", ai: "strategist", boss: true, skill: "zhengshu",
+                drops: [{ item: "龙鳞铠", rate: 1 }] },
+  "司马懿亲军": { lv: 53, hp: 1100, atk: 124, int: 16, def: 60, spd: 22, luck: 10, gold: [1150, 1450], color: "#2a3a5a", ai: "brute", elite: true,
+                drops: [{ item: "还魂丹", rate: 0.20 }, { item: "龙泉剑", rate: 0.05 }] },
+  // 最终 Boss：司马懿（三形态：坚守→反击→天命全屏计策）
+  "司马懿":   { lv: 55, hp: 12000, atk: 120, int: 40, def: 70, spd: 24, luck: 12, gold: [20000, 20000], color: "#2a2a4a", ai: "caster", boss: true,
+                drops: [{ item: "七星剑", rate: 1 }],
+                phases: [
+                  { hpBelow: 0.7, say: ["司马懿：蜀军久战必疲——全军，转守为攻！"],
+                    statsMult: { atk: 1.35, def: 0.75 } },
+                  { hpBelow: 0.4, say: ["司马懿：天命在魏！星河流转，尽归吾掌——"],
+                    skills: ["tianming"] },
+                ] },
+};
+
+// 战斗编组：pre=战前台词 / half=50%血台词（text.js 路径）
+// unbeatable + surviveRounds：撑满回合即按胜利演出处理；fixedReward 覆盖经验金钱结算
+// 扩展 schema（第三~十一章机制，引擎读 schema 不写死）：
+//   terrain: 指定计策地形（缺省取玩家脚下地块）
+//   chain: ["组2","组3"]  连战：胜利不结算直接开下一场（场间可紧急用 1 个道具），打完统一结算
+//   waves: [["敌","敌"],["敌"]]  波次战：不退出战斗、HP/MP 保留，全部波次算一场结算
+//   recruit: {withinRounds, hpBelow, joins} 收服战：限定回合内打到血线即收服（触发 onRecruit）
+//   scriptedLoss: true + onLoss: [动作]  固定败战：第 2 回合起敌方属性×3，战败走剧情不惩罚
+const BATTLE_GROUPS = {
+  ch00_boss:      { enemies: ["黄巾头目", "黄巾贼", "黄巾贼"], boss: true,
+                    pre: "ch00.bossPre", half: "ch00.bossHalf" },
+  ch01_patrol:    { enemies: ["曹兵", "曹兵", "曹军弓手"], boss: false,
+                    pre: "ch01.patrolPre" },
+  ch01_boss:      { enemies: ["于禁", "曹军什长", "曹军弓手"], boss: true,
+                    pre: "ch01.bossPre", half: "ch01.bossHalf" },
+  ch02_boss:      { enemies: ["纪灵", "袁术兵", "袁术弓手"], boss: true,
+                    pre: "ch02.bossPre", half: "ch02.bossHalf" },
+  ch02_zhangliao: { enemies: ["张辽"], boss: true, unbeatable: true, surviveRounds: 5,
+                    fixedReward: { exp: 100, gold: 0 },
+                    pre: "ch02.liaoPre", half: "ch02.liaoHalf" },
+  // —— 第三章 ——
+  ch03_tuwei:     { enemies: ["车胄先锋", "曹军都伯", "曹军精骑"], boss: true,
+                    pre: "ch03.bossPre", half: "ch03.bossHalf" },
+  // —— 第四章 ——
+  ch04_siege:     { enemies: ["曹军先锋", "曹军虎卫", "曹军先锋"], boss: false,
+                    pre: "ch04.gatePre1",
+                    chain: ["ch04_chezhou2"] },
+  ch04_chezhou2:  { enemies: ["车胄", "曹军虎卫", "曹军虎卫"], boss: true,
+                    pre: "ch04.gatePre2", half: "ch04.chezhouHalf" },
+  ch04_yexi:      { enemies: ["曹军虎卫", "曹军虎卫", "曹军先锋"], boss: true,
+                    unbeatable: true, surviveRounds: 4, fixedReward: { exp: 0, gold: 0 },
+                    pre: "ch04.yexiPre", half: "ch04.yexiHalf" },
+  ch04_yanliang:  { enemies: ["颜良"], boss: true,
+                    pre: "ch04.yanPre", half: "ch04.yanHalf",
+                    chain: ["ch04_wenchou"] },
+  ch04_wenchou:   { enemies: ["文丑"], boss: true,
+                    pre: "ch04.wenPre", half: "ch04.wenHalf" },
+  // —— 第五章 · 五关守将 ——
+  ch05_kongxiu:   { enemies: ["孔秀", "东岭守军"], boss: true,
+                    pre: "ch05.kongPre", half: "ch05.kongHalf" },
+  ch05_hanfu:     { enemies: ["韩福", "洛阳守军", "洛阳守军"], boss: true,
+                    pre: "ch05.hanPre", half: "ch05.hanHalf" },
+  ch05_bianxi:    { enemies: ["卞喜", "汜水守军", "汜水守军"], boss: true,
+                    pre: "ch05.bianPre", half: "ch05.bianHalf" },
+  ch05_wangzhi:   { enemies: ["王植", "荥阳守军", "荥阳守军"], boss: true,
+                    pre: "ch05.wangPre", half: "ch05.wangHalf" },
+  ch05_qinqi:     { enemies: ["秦琪", "荥阳守军"], boss: true,
+                    pre: "ch05.qinPre", half: "ch05.qinHalf" },
+  ch05_peiyuan:   { enemies: ["裴元绍", "黄巾残党", "黄巾残党"], boss: true,
+                    pre: "ch05.peiPre", half: "ch05.peiHalf" },
+  ch05_zhangfei:  { enemies: ["张飞(误会)"], boss: true, unbeatable: true, surviveRounds: 3,
+                    fixedReward: { exp: 0, gold: 0 },
+                    pre: "ch05.flyPre", half: "ch05.flyHalf" },
+  // —— 第六章 ——
+  ch06_bandit1:   { enemies: ["匪首张武", "新野匪徒", "新野匪徒"], boss: true,
+                    pre: "ch06.bandit1Pre", half: "ch06.banditHalf" },
+  ch06_bandit2:   { enemies: ["匪首陈孙", "新野匪徒", "新野匪徒"], boss: true,
+                    pre: "ch06.bandit2Pre", half: "ch06.banditHalf" },
+  ch06_bandit3:   { enemies: ["匪首赵慈", "新野匪徒", "新野匪徒"], boss: true,
+                    pre: "ch06.bandit3Pre", half: "ch06.banditHalf" },
+  ch06_caimao:    { enemies: ["蔡瑁追兵", "博望曹军", "博望曹军"], boss: false,
+                    pre: "ch06.caimaoPre", half: "ch06.caimaoHalf" },
+  // —— 第七章 ——
+  ch07_bowang:    { enemies: ["夏侯惇", "博望曹军", "博望曹军"], boss: true,
+                    pre: "ch07.bossPre", half: "ch07.bossHalf",
+                    fire: { round: 3, say: "ch07.fireSay", dmg: 800 } },
+  ch07_fire:      { waves: [["曹军残兵", "曹军残兵"], ["曹军残兵", "曹军残兵", "曹军残兵"]],
+                    boss: false, pre: "ch07.xinyeFirePre" },
+  ch07_escort1:   { enemies: ["曹军残兵", "曹军残兵"], boss: true, protect: "百姓",
+                    pre: "ch07.escortPre", half: "ch07.escortHalf" },
+  ch07_escort2:   { enemies: ["曹军残兵", "曹军残兵", "博望曹军"], boss: true, protect: "百姓",
+                    pre: "ch07.escortPre", half: "ch07.escortHalf" },
+  ch07_escort3:   { enemies: ["曹军虎卫", "曹军残兵", "博望曹军"], boss: true, protect: "百姓",
+                    pre: "ch07.escortPre", half: "ch07.escortHalf" },
+  ch07_cb1:       { enemies: ["博望曹军", "博望曹军", "博望曹军"], boss: false,
+                    pre: "ch07.cbPre1", chain: ["ch07_cb2"] },
+  ch07_cb2:       { enemies: ["曹军虎卫", "曹军虎卫", "博望曹军"], boss: false,
+                    chain: ["ch07_cb3"] },
+  ch07_cb3:       { enemies: ["曹军虎卫", "曹军残兵", "曹军残兵"], boss: false,
+                    chain: ["ch07_cb4"] },
+  ch07_cb4:       { enemies: ["虎豹骑"], boss: true,
+                    pre: "ch07.cbPre4", half: "ch07.cbHalf4", chain: ["ch07_cb5"] },
+  ch07_cb5:       { waves: [["虎豹骑"], ["虎豹骑"]], boss: true,
+                    pre: "ch07.cbPre5", half: "ch07.cbHalf4" },
+  // —— 第八章 ——
+  ch08_chibi:     { waves: [["曹军水兵", "曹军水兵", "曹军水兵"], ["水师都督", "水军校尉"]],
+                    boss: true, pre: "ch08.chibiPre", half: "ch08.chibiHalf",
+                    fire: { round: 2, say: "ch08.fireSay", dmg: 1000 } },
+  ch08_wulin:     { enemies: ["乌林残军", "乌林残军", "水军校尉"], boss: false,
+                    pre: "ch08.wulinPre" },
+  ch08_huarong:   { enemies: ["曹操亲卫队", "华容曹兵", "华容曹兵"], boss: true,
+                    forceEndRound: 6,
+                    pre: "ch08.huarongPre", half: "ch08.huarongHalf" },
+  // —— 第九章 ——
+  ch09_guiyang:   { enemies: ["赵范部将", "荆南兵", "荆南兵"], boss: true,
+                    pre: "ch09.guiyangPre", half: "ch09.bossHalf" },
+  ch09_wuling:    { enemies: ["金旋", "荆南弓手", "荆南弓手"], boss: true,
+                    pre: "ch09.wulingPre", half: "ch09.bossHalf" },
+  ch09_huangzhong:{ enemies: ["黄忠(敌)"], boss: true,
+                    recruit: { withinRounds: 3, hpBelow: 0.3, joins: "黄忠" },
+                    pre: "ch09.huangPre", half: "ch09.huangHalf" },
+  // —— 第十章 ——
+  ch10_luo1:      { enemies: ["雒城守军", "雒城守军", "蜀军弓手"], boss: true,
+                    pre: "ch10.luo1Pre", half: "ch10.bossHalf" },
+  ch10_luofeng:   { enemies: ["落凤坡伏兵", "落凤坡伏兵", "落凤坡伏兵"], boss: true,
+                    scriptedLoss: true, pre: "ch10.luofengPre", half: "ch10.luofengHalf" },
+  ch10_zhangren:  { enemies: ["张任", "蜀军名将", "蜀军弓手"], boss: true,
+                    pre: "ch10.zhangrenPre", half: "ch10.zhangrenHalf" },
+  ch10_machao:    { enemies: ["马超(敌)"], boss: true,
+                    recruit: { withinRounds: 4, hpBelow: 0.3, joins: "马超" },
+                    pre: "ch10.machaoPre", half: "ch10.machaoHalf" },
+  ch10_dingjun:   { enemies: ["夏侯渊", "蜀军名将"], boss: true,
+                    pre: "ch10.dingjunPre", half: "ch10.dingjunHalf",
+                    chain: ["ch10_zhanghe"] },
+  ch10_zhanghe:   { enemies: ["张郃", "蜀军名将"], boss: true,
+                    pre: "ch10.zhanghePre", half: "ch10.zhangrenHalf" },
+  // —— 第十一章 ——
+  ch11_first:     { enemies: ["魏军先锋", "魏军先锋", "魏军先锋"], boss: false,
+                    pre: "ch11.firstPre" },
+  ch11_ambush:    { enemies: ["天水守军", "天水守军", "魏军虎贲"], boss: true,
+                    pre: "ch11.ambushPre", half: "ch11.ambushHalf" },
+  ch11_jiangwei:  { enemies: ["姜维(敌)"], boss: true,
+                    recruit: { withinRounds: 4, hpBelow: 0.35, joins: "姜维" },
+                    pre: "ch11.jiangPre", half: "ch11.jiangHalf" },
+  ch11_jieting:   { enemies: ["街亭魏军", "街亭魏军", "魏军虎贲"], boss: true,
+                    scriptedLoss: true, pre: "ch11.jietingPre", half: "ch11.jietingHalf" },
+  ch11_retreat:   { enemies: ["魏军虎贲", "魏军虎贲"], boss: false,
+                    pre: "ch11.retreatPre" },
+  ch11_guohuai:   { enemies: ["郭淮", "魏军虎贲"], boss: true,
+                    pre: "ch11.zhen1Pre", half: "ch11.bossHalf" },
+  ch11_sunli:     { enemies: ["孙礼", "魏军虎贲"], boss: true,
+                    pre: "ch11.zhen2Pre", half: "ch11.bossHalf" },
+  ch11_caozhen:   { enemies: ["曹真", "司马懿亲军"], boss: true,
+                    pre: "ch11.zhen3Pre", half: "ch11.bossHalf" },
+  ch11_simayi:    { enemies: ["司马懿", "司马懿亲军", "司马懿亲军"], boss: true,
+                    pre: "ch11.simayiPre", half: "ch11.simayiHalf" },
+};
+
+if (typeof module !== "undefined") module.exports = { ENEMIES: ENEMIES, BATTLE_GROUPS: BATTLE_GROUPS };

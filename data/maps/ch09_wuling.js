@@ -1,0 +1,51 @@
+// 地图 · ch09_wuling 武陵（第九章：Boss 金旋）
+var MAPS = typeof MAPS !== "undefined" ? MAPS : {};
+
+MAPS["ch09_wuling"] = {
+  name: "武陵",
+  grid: [
+    "##########GG##########",
+    "#....................#",
+    "#..BBBB...BBBB.......#",
+    "#..BBBB...BBBB....T..#",
+    "#..BDBB...BBDB.......#",
+    "#....................#",
+    "#...T..........T.....#",
+    "#....................#",
+    "#..BBBB...BBBB.......#",
+    "#..BBBB...BBBB....T..#",
+    "#..BDBB...BBDB.......#",
+    "#....................#",
+    "#.....T......T.......#",
+    "#....................#",
+    "#....................#",
+    "#....T.......T.......#",
+    "#....................#",
+    "##########GG##########",
+  ],
+  encounterTiles: [],
+  npcs: [
+    { id: "inn",    x: 4,  y: 5,  color: "#c98a4b", name: "旅店老板",   shop: "ch09_inn" },
+    { id: "weapon", x: 12, y: 5,  color: "#8a93a8", name: "武器店老板", shop: "ch09_weapon" },
+    { id: "item",   x: 4,  y: 11, color: "#7ee2a0", name: "杂货店老板", shop: "ch09_item" },
+    { id: "v1",     x: 7,  y: 7,  color: "#4f8cff", name: "市民",
+      lines: ["金太守弃城而逃，武陵百姓总算松了口气。", "长沙韩玄苛暴，黄老将军却是条好汉。"] },
+    // Boss：金旋（张飞取武陵）
+    { id: "jinxuan", x: 10, y: 1, color: "#6a5a3a", name: "金旋",
+      boss: "ch09_wuling",
+      appearIf: { flag: "q9", is: "guiyang" },
+      onWin: [{ set: { q9: "wuling" } }, { toast: "武陵已定，东取长沙（东门）" }] },
+  ],
+  chests: [
+    { x: 18, y: 14, id: "w1", items: { "返魂香": 1 } },
+  ],
+  transitions: [
+    { x: 10, y: 17, to: { map: "ch09_field_n", x: 10, y: 1 } },
+    { x: 11, y: 17, to: { map: "ch09_field_n", x: 10, y: 1 } },
+    // 东门：取长沙
+    { x: 10, y: 0,  if: { flag: "q9", is: "wuling" }, to: { map: "ch09_field_s", x: 1, y: 8 } },
+    { x: 11, y: 0,  if: { flag: "q9", is: "wuling" }, to: { map: "ch09_field_s", x: 1, y: 8 } },
+  ],
+};
+
+if (typeof module !== "undefined") module.exports = MAPS;
