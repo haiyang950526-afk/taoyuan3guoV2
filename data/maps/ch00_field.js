@@ -4,7 +4,7 @@ var MAPS = typeof MAPS !== "undefined" ? MAPS : {};
 MAPS["ch00_field"] = {
   name: "徐州城外",
   grid: [
-    "RRRRRRRRRRRRRRRRRRRRRRRR",
+    "RRRRRRRRRRRRRRRRRRRCCRRR",
     "RCC..TT..........WW....R",
     "RC...TTT....T...WW.....G",
     "R......T.....T...WW....G",
@@ -21,7 +21,7 @@ MAPS["ch00_field"] = {
     "R..T.......T....,...T..R",
     "R....T..........,WW....R",
     "R..............,WW.....R",
-    "RRRRRRRRRRGGRRRRRRRRRRRR",
+    "RRCCRRRRRRGGRRRRRRRRRRRR",
   ],
   encounterTiles: ["."],
   encounterRate: 0.12,
@@ -52,10 +52,16 @@ MAPS["ch00_field"] = {
                      { warp: { map: "ch04_tushan", x: 1, y: 2 } }] }] },
   ],
   transitions: [
-    { x: 2,  y: 1,  to: { map: "ch00_cave", x: 6, y: 9 } },
-    { x: 1,  y: 1,  to: { map: "ch00_cave", x: 6, y: 9 } },
+    { x: 2,  y: 1,  to: { map: "ch00_cave", x: 9,  y: 11 } },
+    { x: 1,  y: 1,  to: { map: "ch00_cave", x: 10, y: 11 } },
     { x: 10, y: 17, to: { map: "ch00_city", x: 10, y: 16 } },
     { x: 11, y: 17, to: { map: "ch00_city", x: 10, y: 16 } },
+    // 北缘山地洞口：北山山洞（迷宫）
+    { x: 19, y: 0,  to: { map: "ch00_cave2", x: 8, y: 11 } },
+    { x: 20, y: 0,  to: { map: "ch00_cave2", x: 9, y: 11 } },
+    // 南缘山地洞口：藏宝山洞（酒馆樗蒲首次全白后洞口才生效）
+    { x: 2,  y: 17, if: { flag: "tavern_clue", exists: true }, to: { map: "ch00_cave3", x: 6, y: 6 } },
+    { x: 3,  y: 17, if: { flag: "tavern_clue", exists: true }, to: { map: "ch00_cave3", x: 6, y: 6 } },
     // 东南门：第一章起通郯城野外
     { x: 23, y: 8,  if: { flag: "q1", exists: true }, to: { map: "ch01_field", x: 1, y: 8 } },
     { x: 23, y: 9,  if: { flag: "q1", exists: true }, to: { map: "ch01_field", x: 1, y: 8 } },

@@ -1,8 +1,9 @@
 // 数据 · 装备 / 道具 / 商店库存
-// 装备代际（02/04 文档）：序章铜 → 第一章铁 → 第二章钢。
-// 三槽：weapon 加攻 / armor 加防 / acc 特殊效果（护心镜：防+3）。
-// 商店数据驱动：type = inn 旅店 / equip 武器店（兼售防具饰品）/ item 杂货店。
-// 定价假设：同代武器 ≈ 本章野怪 15-20 场的收入；旅店 ≈ 2-3 场，保证
+// 装备代际（02/04 文档）：序章铜 → 第一章铁 → 第二章钢 → 三章精钢/玄铁 → 八章白银 → 十章龙泉。
+// 五槽：weapon 加攻 / armor 加防 / helmet 头盔 / legs 护腿（头盔护腿 def 约为同代铠甲一半）/ acc 特殊效果。
+// 商店数据驱动：type = inn 旅店 / equip 装备店（title+filter 拆分武器店/防具店）/ item 杂货店。
+// 库存原则：每城 = 本代装备 + 上一代装备（只低一等，不再更旧）。
+// 定价假设：同代武器 ≈ 本章野怪 12-15 场的收入；旅店 ≈ 2 场，保证
 // "出城一波、回城休整"后仍有结余向下一代装备攒钱。
 "use strict";
 
@@ -27,6 +28,8 @@ const ITEMS = {
   "落日弓":     { type: "weapon", arm: "bow",   atk: 58, price: 60000, nosell: true, desc: "名品：落日九射，攻击+58（弓系）" },
   "七星杖":     { type: "weapon", arm: "fan",   atk: 20, int: 50, price: 60000, nosell: true, desc: "名品：七星续命，攻+20 智+50（扇系）" },
   "七星剑":     { type: "weapon", atk: 55, price: 50000, nosell: true, desc: "名品彩蛋：七星宝剑，攻击+55" },
+  // 成长性武器（樗蒲首次全黑奖励）：攻击 = 4 + 1.5×持有者等级（formulas.js equipBonus 的 grow 判定）
+  "时运":   { type: "weapon", atk: 4, grow: 1.5, price: 0, nosell: true, desc: "樗蒲首奖：攻+4 且随等级成长（每级+1.5），攻击时偶发眩晕/起火/追加/回血" },
   // 防具（def）
   "布衣":   { type: "armor", def: 2,  price: 150,  desc: "粗布衣裳，防御+2" },
   "皮甲":   { type: "armor", def: 4,  price: 500,  desc: "鞣制皮甲，防御+4" },
@@ -40,6 +43,20 @@ const ITEMS = {
   "护心镜": { type: "acc", def: 3, price: 1500, desc: "护住心口的铜镜，防御+3" },
   "玉佩":   { type: "acc", int: 3, price: 2000, desc: "温润古玉，智力+3" },
   "诸葛巾": { type: "acc", int: 20, price: 30000, nosell: true, desc: "名品彩蛋：武侯纶巾，智力+20" },
+  // 头盔（def，约为同代铠甲一半）
+  "皮帽":   { type: "helmet", def: 1,  price: 100,   desc: "皮革软帽，防御+1" },
+  "铁盔":   { type: "helmet", def: 3,  price: 600,   desc: "铁打兜鍪，防御+3" },
+  "钢盔":   { type: "helmet", def: 5,  price: 1800,  desc: "钢锻战盔，防御+5" },
+  "玄铁盔": { type: "helmet", def: 9,  price: 4000,  desc: "玄铁重盔，防御+9" },
+  "白银盔": { type: "helmet", def: 14, price: 9000,  desc: "白银亮盔，防御+14" },
+  "龙鳞盔": { type: "helmet", def: 20, price: 20000, desc: "龙鳞宝盔，防御+20" },
+  // 护腿（def，约为同代铠甲一半）
+  "布护腿":   { type: "legs", def: 1,  price: 120,   desc: "粗布裹腿，防御+1" },
+  "皮护腿":   { type: "legs", def: 2,  price: 550,   desc: "皮革护腿，防御+2" },
+  "铁护腿":   { type: "legs", def: 4,  price: 1500,  desc: "铁叶护腿，防御+4" },
+  "钢护腿":   { type: "legs", def: 8,  price: 3600,  desc: "钢锻护腿，防御+8" },
+  "白银护腿": { type: "legs", def: 12, price: 8500,  desc: "白银护腿，防御+12" },
+  "龙鳞护腿": { type: "legs", def: 18, price: 19000, desc: "龙鳞护腿，防御+18" },
   // 消耗道具（heal 治疗 / mp 回蓝 / revive 复活比例 / dmgAll 固定群伤 / mat 素材）
   "草药":   { type: "item", heal: 40,  price: 50,  desc: "回复40点HP" },
   "金疮药": { type: "item", heal: 120, price: 180, desc: "回复120点HP" },
@@ -62,59 +79,71 @@ const ITEMS = {
 };
 
 const SHOPS = {
-  // 序章 · 徐州城（铜代际）
+  // 序章 · 徐州城（铜代际；首城只卖本代）
   ch00_inn:    { type: "inn", cost: 30, text: "客官，住店吗？30金一晚，包你精神百倍。" },
-  ch00_weapon: { type: "equip", stock: ["铜剑", "铁剑", "布衣", "皮甲"], text: "客官，看看兵器衣甲？买了立刻给好汉配上。" },
+  ch00_weapon: { type: "equip", title: "武器店", filter: ["weapon"], stock: ["铜剑", "铁剑"], text: "客官，看看兵器？买了立刻给好汉配上。" },
+  ch00_armor:  { type: "equip", title: "防具店", filter: ["armor", "helmet", "legs", "acc"], stock: ["布衣", "皮甲", "皮帽", "布护腿"], text: "衣甲帽靴，样样保命，客官请。" },
   ch00_item:   { type: "item", stock: ["草药"], text: "草药便宜卖了，出门必备。" },
-  // 第一章 · 郯城（铁代际）
+  // 第一章 · 郯城（铁代际 + 上一代铜）
   ch01_inn:    { type: "inn", cost: 60, text: "兵荒马乱的，60金一晚，热水管够。" },
-  ch01_weapon: { type: "equip", stock: ["铁剑", "铁甲", "皮盾"], text: "曹军势大，不添点铁器怎么行？" },
+  ch01_weapon: { type: "equip", title: "武器店", filter: ["weapon"], stock: ["铁剑", "铜剑"], text: "曹军势大，不添点铁器怎么行？" },
+  ch01_armor:  { type: "equip", title: "防具店", filter: ["armor", "helmet", "legs", "acc"], stock: ["皮盾", "铁甲", "铁盔", "皮护腿", "皮甲", "皮帽", "布护腿"], text: "铁器皮货都有，客官慢挑。" },
   ch01_item:   { type: "item", stock: ["草药", "金疮药"], text: "金疮药是新到的伤药，疗伤有奇效。" },
-  // 第二章 · 小沛（钢代际）
+  // 第二章 · 小沛（钢代际 + 上一代铁）
   ch02_inn:    { type: "inn", cost: 80, text: "小沛地方小，80金一晚，委屈客官了。" },
-  ch02_weapon: { type: "equip", stock: ["钢剑", "钢甲", "护心镜"], text: "钢器难得，价钱是不便宜，可保命啊。" },
+  ch02_weapon: { type: "equip", title: "武器店", filter: ["weapon"], stock: ["钢剑", "铁剑"], text: "钢器难得，价钱是不便宜，可保命啊。" },
+  ch02_armor:  { type: "equip", title: "防具店", filter: ["armor", "helmet", "legs", "acc"], stock: ["钢甲", "钢盔", "铁护腿", "护心镜", "铁甲", "铁盔", "皮护腿"], text: "钢甲铁盔，都是好货色。" },
   ch02_item:   { type: "item", stock: ["草药", "金疮药"], text: "药材都有些，客官看着挑。" },
   // 第二章 · 下邳城（钢代际，与 小沛 同价）
   ch02b_inn:    { type: "inn", cost: 80, text: "下邳大城，80金一晚，住得舒坦。" },
-  ch02b_weapon: { type: "equip", stock: ["钢剑", "钢甲", "护心镜"], text: "钢剑钢甲护心镜，都是好货色。" },
+  ch02b_weapon: { type: "equip", title: "武器店", filter: ["weapon"], stock: ["钢剑", "铁剑"], text: "钢剑钢甲，都是好货色。" },
+  ch02b_armor:  { type: "equip", title: "防具店", filter: ["armor", "helmet", "legs", "acc"], stock: ["钢甲", "钢盔", "铁护腿", "护心镜", "铁甲", "铁盔", "皮护腿"], text: "钢甲钢盔护心镜，客官请。" },
   ch02b_item:   { type: "item", stock: ["草药", "金疮药"], text: "药材齐备，客官请便。" },
-  // 第三章 · 许都（大商店：钢+代，玉佩、清泉、火药弹上线）
+  // 第三章 · 许都（大商店：钢+代 精钢/玄铁 + 上一代钢）
   ch03_inn:    { type: "inn", cost: 120, text: "许都繁华，120金一晚，酒水齐全。" },
-  ch03_weapon: { type: "equip", stock: ["钢剑", "精钢剑", "钢甲", "玄铁甲", "护心镜", "玉佩"], text: "许都大店，南北好货都有，客官慢挑。" },
+  ch03_weapon: { type: "equip", title: "武器店", filter: ["weapon"], stock: ["精钢剑", "钢剑"], text: "许都大店，南北好货都有，客官慢挑。" },
+  ch03_armor:  { type: "equip", title: "防具店", filter: ["armor", "helmet", "legs", "acc"], stock: ["玄铁甲", "玄铁盔", "钢护腿", "玉佩", "钢甲", "钢盔", "铁护腿", "护心镜"], text: "玄铁精工，京城独一份。" },
   ch03_item:   { type: "item", stock: ["草药", "金疮药", "清泉", "火药弹"], text: "清泉润喉，火药防身，都是时新货。" },
-  // 第五章 · 洛阳（大商店：精钢系列、还魂丹上线）
+  // 第五章 · 洛阳（精钢/玄铁 + 上一代钢；还魂丹上线）
   ch05_inn:    { type: "inn", cost: 150, text: "洛阳古都，150金一晚，马虎不得。" },
-  ch05_weapon: { type: "equip", stock: ["精钢剑", "玄铁甲", "玉佩"], text: "精钢玄铁，都是关内难寻的好东西。" },
+  ch05_weapon: { type: "equip", title: "武器店", filter: ["weapon"], stock: ["精钢剑", "钢剑"], text: "精钢好刃，关内难寻。" },
+  ch05_armor:  { type: "equip", title: "防具店", filter: ["armor", "helmet", "legs", "acc"], stock: ["玄铁甲", "玄铁盔", "钢护腿", "玉佩", "钢甲", "钢盔", "铁护腿"], text: "玄铁细铠，洛阳名品。" },
   ch05_item:   { type: "item", stock: ["金疮药", "还魂丹", "清泉"], text: "还魂丹千金难求，客官要不要备一颗？" },
   // 第五章 · 古城（小旅店）
   ch05g_inn:   { type: "inn", cost: 100, text: "古城虽小，100金一晚，被褥干净。" },
   // 第六章 · 新野 / 襄阳（文房铺卖计策书）
   ch06_inn:    { type: "inn", cost: 150, text: "新野小城，150金一晚，客官歇息。" },
-  ch06_weapon: { type: "equip", stock: ["精钢剑", "玄铁甲", "玉佩"], text: "新野地僻，这些是压箱底的好货。" },
+  ch06_weapon: { type: "equip", title: "武器店", filter: ["weapon"], stock: ["精钢剑", "钢剑"], text: "新野地僻，这些是压箱底的好货。" },
+  ch06_armor:  { type: "equip", title: "防具店", filter: ["armor", "helmet", "legs", "acc"], stock: ["玄铁甲", "玄铁盔", "钢护腿", "玉佩", "钢甲", "钢盔", "铁护腿"], text: "衣甲齐全，客官请便。" },
   ch06_item:   { type: "item", stock: ["金疮药", "还魂丹", "清泉"], text: "药材齐备，客官请便。" },
   ch06_book:   { type: "item", stock: ["火计书", "水计书", "落石书", "风计书", "雷计书", "石阵书"], text: "文房铺中，计策书六卷，识货的自来。" },
   ch06b_inn:   { type: "inn", cost: 180, text: "襄阳大城，180金一晚。" },
   // 第七章 · 新野战时商店（兵荒马乱，全线 +20%）
   ch07_inn:    { type: "inn", cost: 180, text: "兵荒马乱的，180金一晚，热水照供。" },
-  ch07_weapon: { type: "equip", priceMult: 1.2, stock: ["精钢剑", "玄铁甲", "玉佩"], text: "战事吃紧，价钱涨了两成，客官莫怪。" },
+  ch07_weapon: { type: "equip", title: "武器店", filter: ["weapon"], priceMult: 1.2, stock: ["精钢剑", "钢剑"], text: "战事吃紧，价钱涨了两成，客官莫怪。" },
+  ch07_armor:  { type: "equip", title: "防具店", filter: ["armor", "helmet", "legs", "acc"], priceMult: 1.2, stock: ["玄铁甲", "玄铁盔", "钢护腿", "玉佩", "钢甲", "钢盔", "铁护腿"], text: "物资紧张，涨了两成，仍是保命要紧。" },
   ch07_item:   { type: "item", priceMult: 1.2, stock: ["金疮药", "还魂丹", "清泉", "火药弹"], text: "物资紧张，涨了两成，仍是保命要紧。" },
-  // 第八章 · 柴桑（大商店：白银系列）
+  // 第八章 · 柴桑（白银代际 + 上一代玄铁）
   ch08_inn:    { type: "inn", cost: 220, text: "柴桑临江，220金一晚，江景上房。" },
-  ch08_weapon: { type: "equip", stock: ["白银剑", "白银铠", "玉佩"], text: "白银精工，江东最好的铁器都在这了。" },
+  ch08_weapon: { type: "equip", title: "武器店", filter: ["weapon"], stock: ["白银剑", "精钢剑"], text: "白银精工，江东最好的铁器都在这了。" },
+  ch08_armor:  { type: "equip", title: "防具店", filter: ["armor", "helmet", "legs", "acc"], stock: ["白银铠", "白银盔", "白银护腿", "玉佩", "玄铁甲", "玄铁盔", "钢护腿"], text: "白银衣甲，江上无双。" },
   ch08_item:   { type: "item", stock: ["金疮药", "还魂丹", "甘露", "仙草露", "诸葛连弩图"], text: "甘露仙草，连弩图谱，客官好眼光。" },
   // 第九章 · 四郡集市（弓系上线、返魂香开售；黑市游商贵五成）
   ch09_inn:    { type: "inn", cost: 260, text: "荆南地界，260金一晚，图个安稳。" },
-  ch09_weapon: { type: "equip", stock: ["白银剑", "白银铠", "铁刀", "铁矛", "铁枪", "铁脊弓", "羽扇"], text: "四郡集市，刀枪矛弓扇，各系齐备。" },
+  ch09_weapon: { type: "equip", title: "武器店", filter: ["weapon"], stock: ["白银剑", "铁刀", "铁矛", "铁枪", "铁脊弓", "羽扇", "精钢剑"], text: "四郡集市，刀枪矛弓扇，各系齐备。" },
+  ch09_armor:  { type: "equip", title: "防具店", filter: ["armor", "helmet", "legs", "acc"], stock: ["白银铠", "白银盔", "白银护腿", "玉佩", "玄铁甲", "玄铁盔", "钢护腿"], text: "衣甲帽靴，南货北货都有。" },
   ch09_item:   { type: "item", stock: ["金疮药", "还魂丹", "甘露", "返魂香"], text: "返魂香能救命，客官备一支？" },
   ch09_black:  { type: "equip", priceMult: 1.5, stock: ["白银剑", "白银铠"], text: "荆州游商：好货不便宜，概不还价。（固定两件，贵五成）" },
-  // 第十章 · 成都大宝库（龙泉系列）
+  // 第十章 · 成都大宝库（龙泉代际 + 上一代白银）
   ch10_inn:    { type: "inn", cost: 300, text: "天府之国，300金一晚，巴适得很。" },
-  ch10_weapon: { type: "equip", stock: ["龙泉剑", "龙鳞铠", "白银剑", "白银铠"], text: "成都大宝库，龙泉龙鳞，镇店之宝。" },
+  ch10_weapon: { type: "equip", title: "武器店", filter: ["weapon"], stock: ["龙泉剑", "白银剑"], text: "成都大宝库，龙泉镇店。" },
+  ch10_armor:  { type: "equip", title: "防具店", filter: ["armor", "helmet", "legs", "acc"], stock: ["龙鳞铠", "龙鳞盔", "龙鳞护腿", "玉佩", "白银铠", "白银盔", "白银护腿"], text: "龙鳞宝铠，镇店之宝。" },
   ch10_item:   { type: "item", stock: ["还魂丹", "仙草露", "甘露", "返魂香", "精铁"], text: "仙草返魂，还有精铁少许。" },
   ch10b_inn:   { type: "inn", cost: 240, text: "涪城小店，240金一晚。" },
   // 第十一章 · 汉中军需（终极常规装备 + 名品限量）
   ch11_inn:    { type: "inn", cost: 350, text: "汉中军需客栈，350金一晚。" },
-  ch11_weapon: { type: "equip", stock: ["龙泉剑", "龙鳞铠", "雌雄双股剑", "龙胆枪", "七星剑", "诸葛巾"], text: "军需官：名品限量，只卖识货之人。" },
+  ch11_weapon: { type: "equip", title: "武器店", filter: ["weapon"], stock: ["龙泉剑", "雌雄双股剑", "龙胆枪", "七星剑", "白银剑"], text: "军需官：名品限量，只卖识货之人。" },
+  ch11_armor:  { type: "equip", title: "防具店", filter: ["armor", "helmet", "legs", "acc"], stock: ["龙鳞铠", "龙鳞盔", "龙鳞护腿", "诸葛巾", "白银铠", "白银盔", "白银护腿"], text: "军需官：宝铠宝盔，北伐专用。" },
   ch11_item:   { type: "item", stock: ["仙草露", "甘露", "返魂香", "诸葛连弩图"], text: "军需药材，北伐专用。" },
 };
 

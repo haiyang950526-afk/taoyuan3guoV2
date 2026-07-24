@@ -21,7 +21,7 @@ MAPS["ch01_field"] = {
     "R.........T......T.....R",
     "R...T..................R",
     "R........T......T......R",
-    "RRRRRRRRRRRRRRRRRRRRRRRR",
+    "RRRRRCCRRRRRRRRRRRRRRRRR",
   ],
   encounterTiles: ["."],
   encounterRate: 0.12,
@@ -42,6 +42,9 @@ MAPS["ch01_field"] = {
     { x: 0,  y: 9,  to: { map: "ch00_field", x: 22, y: 8 } },
     { x: 11, y: 0,  to: { map: "ch01_tancheng", x: 10, y: 16 } },
     { x: 12, y: 0,  to: { map: "ch01_tancheng", x: 10, y: 16 } },
+    // 南缘山地洞口：郯城山窟（迷宫）
+    { x: 5,  y: 17, to: { map: "ch01_cave2", x: 7, y: 11 } },
+    { x: 6,  y: 17, to: { map: "ch01_cave2", x: 8, y: 11 } },
     // 东门：守将下令进军后才可通行
     { x: 23, y: 8,  if: { flag: "q1", is: "march" }, to: { map: "ch01_sishui", x: 1, y: 8 } },
     { x: 23, y: 9,  if: { flag: "q1", is: "march" }, to: { map: "ch01_sishui", x: 1, y: 8 } },

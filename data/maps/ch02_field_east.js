@@ -4,7 +4,7 @@ var MAPS = typeof MAPS !== "undefined" ? MAPS : {};
 MAPS["ch02_field_east"] = {
   name: "沛县郊野",
   grid: [
-    "RRRRRRRRRRRRRRRRRRRRRRRR",
+    "RRRRRRRRRRRRRRRRRRCCRRRR",
     "R...T.....T......T.....R",
     "G,,,,,,,,,.............R",
     "G.........,,,,,....T...R",
@@ -42,6 +42,9 @@ MAPS["ch02_field_east"] = {
     { x: 0,  y: 3,  to: { map: "ch00_field", x: 22, y: 2 } },
     { x: 23, y: 9,  to: { map: "ch02_xiaopei", x: 10, y: 1 } },
     { x: 23, y: 10, to: { map: "ch02_xiaopei", x: 10, y: 1 } },
+    // 北缘山地洞口：沛县山窟（迷宫）
+    { x: 18, y: 0,  to: { map: "ch02_cave2", x: 8, y: 11 } },
+    { x: 19, y: 0,  to: { map: "ch02_cave2", x: 9, y: 11 } },
   ],
 };
 

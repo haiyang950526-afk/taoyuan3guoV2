@@ -58,10 +58,12 @@ function equipOf(h, slot) {
 }
 function equipBonus(h, key) {
   var total = 0;
-  ["weapon", "armor", "acc"].forEach(function (s) {
+  ["weapon", "armor", "helmet", "legs", "acc"].forEach(function (s) {
     var e = equipOf(h, s);
     if (e && e.item[key]) {
       var v = e.item[key];
+      // 成长性武器（时运）：攻击随持有者等级成长，atk + grow×Lv
+      if (key === "atk" && e.item.grow) v += Math.floor(e.item.grow * h.lv);
       // 武器强化：每级基础攻击 +5%
       if (s === "weapon" && key === "atk") v = enhancedAtk(v, e.plus);
       total += v;
@@ -215,8 +217,9 @@ function canWield(heroKey, itemId) {
 
 // ---------------- 存档版本与迁移（纯逻辑，前端 save.js 调用） ----------------
 // v2 → v3：补装备仓库字段 equips；v3 → v4：装备实例化展开 + 编成/军师/阵形/强化/图鉴/分线字段
+// v4 → v5：装备五槽，补头盔/护腿槽位
 // v1 及未知版本返回 null（前端提示不兼容）
-var SAVE_VERSION = 4;
+var SAVE_VERSION = 5;
 
 // 装备实例化：旧的 {物品id: 数量} 展开为实例数组 [{uid,id,plus:0}]（强化以实例为单位）
 function expandEquips(old, startUid) {
@@ -245,6 +248,19 @@ function migrateSave(state) {
     if (!state.enhance) state.enhance = {};
     if (!state.dex) state.dex = {};
     if (state.stash === undefined) state.stash = null;
+  }
+  if (state.v === 4) {
+    state.v = 5;
+    // 装备五槽：给所有成员（含后备、分线暂存）补头盔/护腿槽
+    var fixSlots = function (list) {
+      (list || []).forEach(function (h) {
+        h.equips = h.equips || {};
+        if (h.equips.helmet === undefined) h.equips.helmet = null;
+        if (h.equips.legs === undefined) h.equips.legs = null;
+      });
+    };
+    fixSlots(state.party); fixSlots(state.bench);
+    if (state.stash) { fixSlots(state.stash.party); fixSlots(state.stash.bench); }
   }
   return state.v === SAVE_VERSION ? state : null;
 }

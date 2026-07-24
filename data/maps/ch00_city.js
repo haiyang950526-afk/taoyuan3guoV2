@@ -1,4 +1,4 @@
-// 地图 · ch00_city 徐州城（序章主城；第一章扩建：北部太守府，陶谦在此）
+// 地图 · ch00_city 徐州城（序章主城；指引样板城：南北主路+东西横街，店铺下钻，北部太守府）
 // 浏览器共享全局 MAPS；node 各自导出，由测试脚本合并
 var MAPS = typeof MAPS !== "undefined" ? MAPS : {};
 
@@ -6,31 +6,60 @@ MAPS["ch00_city"] = {
   name: "徐州城",
   grid: [
     "########################",
-    "#......PPPPPPPP........#",
-    "#......PPPPPPPP...T....#",
-    "#......PPPPPPPP........#",
-    "#......................#",
-    "#....T..........T......#",
-    "#..BBBB...BBBB.........#",
-    "#..BBBB...BBBB....T....#",
-    "#..BDBB...BBDB.........#",
-    "#......................#",
-    "#...T..........T.......#",
-    "#......................#",
-    "#..BBBB...BBBB.........#",
-    "#..BBBB...BBBB....T....#",
-    "#..BDBB...BBDB.........#",
-    "#......................#",
-    "#.....T......T.........#",
+    "#.....BBBBBBBBBB.......#",
+    "#.....BPPPPPPPPB.......#",
+    "#.....BBBBDBBBBB.......#",
+    "#.........,,...........#",
+    "#....T....,,......T....#",
+    "#.BBBBBBBB,,..BBBBBBBB.#",
+    "#.BBBBBBBB,,..BBBBBBBB.#",
+    "#.BDBBBDBB,,..BDBBBDBB.#",
+    "#,,,,,,,,,,,,,,,,,,,,,,#",
+    "#.........,,...........#",
+    "#.BBBB....,,......BBBB.#",
+    "#.BBBB....,,......BBBB.#",
+    "#.BDBB....,,......BDBB.#",
+    "#,,,,,,,,,,,,,,,,,,,,,,#",
+    "#.........,,...........#",
+    "#....T....,,......T....#",
     "##########GG############",
   ],
   encounterTiles: [],
+  // 建筑招牌（画在顶部居中的 B 格上）
+  signs: [
+    { x: 10, y: 1,  text: "府", color: "#ffd166" },
+    { x: 3,  y: 6,  text: "客", color: "#ffd166" },
+    { x: 7,  y: 6,  text: "酒", color: "#ffd166" },
+    { x: 15, y: 6,  text: "武", color: "#ffd166" },
+    { x: 19, y: 6,  text: "装", color: "#ffd166" },
+    { x: 3,  y: 11, text: "药", color: "#ffd166" },
+    { x: 19, y: 11, text: "训", color: "#ffd166" },
+  ],
   npcs: [
-    { id: "inn",    x: 4,  y: 9,  color: "#c98a4b", name: "旅店老板",   shop: "ch00_inn" },
-    { id: "weapon", x: 12, y: 9,  color: "#8a93a8", name: "武器店老板", shop: "ch00_weapon" },
-    { id: "item",   x: 4,  y: 15, color: "#7ee2a0", name: "杂货店老板", shop: "ch00_item" },
-    { id: "v1",     x: 7,  y: 11, color: "#4f8cff", name: "村民", linesKey: "ch00.v1" },
-    { id: "v2",     x: 15, y: 13, color: "#d88a3a", name: "村民", linesKey: "ch00.v2" },
+    // 城门口告示牌
+    { id: "board1", x: 12, y: 16, color: "#8a7a5a", name: "告示牌",
+      lines: ["告示：沿主路一直往北，即是太守府。",
+              "横街西：旅店·酒馆　横街东：武器店·防具店",
+              "南横街：杂货店（西）·训练所（东）"] },
+    // 主路十字路口告示牌（立在路口东南角，不挡路面）
+    { id: "board2", x: 12, y: 10, color: "#8a7a5a", name: "告示牌",
+      lines: ["告示：西：旅店·酒馆　东：武器店·防具店",
+              "南：杂货店·训练所　北：太守府"] },
+    // 村民指路：按序章任务阶段换口风
+    { id: "v1", x: 7, y: 11, color: "#4f8cff", name: "村民",
+      branches: [
+        { if: { flag: "q0", is: "notStarted" }, say: "ch00.v1Before" },
+        { if: { flag: "q0", is: "accepted" },   say: "ch00.v1Accepted" },
+        { if: { flag: "q0", is: "bossDone" },   say: "ch00.v1BossDone" },
+        { say: "ch00.v1Done" },
+      ] },
+    { id: "v2", x: 15, y: 13, color: "#d88a3a", name: "村民",
+      branches: [
+        { if: { flag: "q0", is: "notStarted" }, say: "ch00.v2Before" },
+        { if: { flag: "q0", is: "accepted" },   say: "ch00.v2Accepted" },
+        { if: { flag: "q0", is: "bossDone" },   say: "ch00.v2BossDone" },
+        { say: "ch00.v2Done" },
+      ] },
     // 编成所（主城设施：出战/后备调换、阵形、军师）
     { id: "camp",   x: 16, y: 11, color: "#7a8a9a", name: "老兵", facility: "camp" },
     // 曹操使者：序章任务发布人；进入第一章后离城
@@ -45,21 +74,6 @@ MAPS["ch00_city"] = {
         { say: "ch00.envoyDone",
           do: [{ chapter: "ch01" }, { set: { q1: "start" } },
                { say: "ch01.intro" }, { toast: "第一章 · 父仇之火" }] },
-      ] },
-    // 陶谦：第一章起在太守府前；第二章病逝剧情后不再出现
-    { id: "taoqian", x: 10, y: 4, color: "#b8a05a", name: "陶谦",
-      appearIf: { flag: "q1", exists: true },
-      hideIf: { flag: "q2", in: ["seal", "lvbu", "anzhi", "jilingCome", "shed", "lost", "done"] },
-      branches: [
-        { if: { flag: "q1", is: "start" }, say: "ch01.taoqianAsk",
-          do: [{ set: { q1: "accepted" } }, { toast: "接取任务：驰援郯城" }] },
-        { if: { flag: "q1", in: ["accepted", "ready", "patrolDone", "march"] },
-          say: "ch01.taoqianWait" },
-        { if: { flag: "q1", is: "yujinDone" }, say: "ch01.rangXuzhou",
-          do: [{ set: { q1: "done" } }, { chapter: "ch02" }, { set: { q2: "start" } },
-               { say: "ch02.intro" }, { toast: "第二章 · 三让徐州" }] },
-        { if: { flag: "q2", is: "start" }, say: "ch02.taoqianDeath",
-          do: [{ set: { q2: "seal" } }, { join: "陈登" }] },
       ] },
     // 报信兵：第二章接印后出现，引出吕布来投
     { id: "soldier", x: 8, y: 5, color: "#9aa4b8", name: "报信兵",
@@ -82,6 +96,15 @@ MAPS["ch00_city"] = {
   transitions: [
     { x: 10, y: 17, to: { map: "ch00_field", x: 11, y: 16 } },
     { x: 11, y: 17, to: { map: "ch00_field", x: 11, y: 16 } },
+    // 太守府大殿
+    { x: 10, y: 4,  to: { map: "ch00_palace", x: 5, y: 7 } },
+    // 店铺室内下钻
+    { x: 3,  y: 9,  to: { map: "ch00_inn_in", x: 4, y: 4 } },
+    { x: 7,  y: 9,  to: { map: "ch00_tavern_in", x: 4, y: 4 } },
+    { x: 15, y: 9,  to: { map: "ch00_weapon_in", x: 4, y: 4 } },
+    { x: 19, y: 9,  to: { map: "ch00_armor_in", x: 4, y: 4 } },
+    { x: 3,  y: 14, to: { map: "ch00_item_in", x: 4, y: 4 } },
+    { x: 19, y: 14, to: { map: "ch00_dojo_in", x: 4, y: 4 } },
   ],
 };
 

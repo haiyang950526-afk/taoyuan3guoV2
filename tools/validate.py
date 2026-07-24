@@ -20,8 +20,8 @@ import sys
 BASE = os.path.dirname(os.path.abspath(__file__))
 RPG = os.path.dirname(BASE)
 
-PASS_TILES = set("GCEFM.,")   # TILE_META 中 pass:true 的字符
-ALL_TILES = set("#BDGTWRCEFPM.,")
+PASS_TILES = set("GCEFM.,L")   # TILE_META 中 pass:true 的字符
+ALL_TILES = set("#BDGTWRCEFPM.,LX")
 
 errors = []
 checks = [0]
@@ -238,7 +238,7 @@ def main():
             check(p in text_paths, "%s：台词路径不存在 %s" % (m["key"], p))
         # 设施类型合法；限时脱出惩罚编组存在；小游戏类型合法
         for f in m["facilities"]:
-            check(f in ("camp", "smith"), "%s：未知设施类型 %s" % (m["key"], f))
+            check(f in ("camp", "smith", "tavern", "dojo"), "%s：未知设施类型 %s" % (m["key"], f))
         for p in m["escape_penalties"]:
             check(p in battle_groups, "%s：限时脱出 penalty 引用未知编组 %s" % (m["key"], p))
         for g in m["minigames"]:

@@ -43,6 +43,7 @@ function spawnEnemies(names) {
       skills: e.skill ? [e.skill] : [],
       phases: e.phases || null, phaseIdx: -1,
       defBuff: 1, atkMult: 1, halfSaid: false,
+      stun: 0, burn: 0,       // 时运武器特效：眩晕（下回合无法行动）/ 起火（3 回合灼烧）
     };
   });
 }
@@ -287,6 +288,26 @@ function physAtk(attacker, target, mult, label) {
     " 受到 " + dmg + " 点伤害" + (r.crit ? "（暴击！）" : "") +
     (target.defending ? "（防御中，伤害减半）" : "") +
     (target.hp <= 0 ? "，倒下了！" : "。"));
+  // 时运（樗蒲首奖成长武器）：我方普攻命中存活敌人时 20% 触发一种时运效果
+  if (!isEnemy(attacker) && isEnemy(target) && target.hp > 0) {
+    const w = equipOf(attacker, "weapon");
+    if (w && w.id === "时运" && Math.random() < 0.2) {
+      const roll = Math.floor(Math.random() * 4);
+      if (roll === 0 && !target.boss) {
+        target.stun = 1;
+        blog("时运发动：" + actorName(target) + " 被震晕了！（下回合无法行动）");
+      } else if (roll === 1) {
+        target.burn = 3;
+        blog("时运发动：" + actorName(target) + " 起火了！（3 回合灼烧）");
+      } else if (roll === 2 || roll === 0) {   // Boss 免眩晕，转为追加伤害
+        target.hp = Math.max(0, target.hp - 5);
+        blog("时运发动：追加 5 点伤害！");
+      } else {
+        attacker.hp = Math.min(attacker.maxHp, attacker.hp + 5);
+        blog("时运发动：" + actorName(attacker) + " 回复 5 点HP！");
+      }
+    }
+  }
   afterEnemyDamaged(target);
   checkProtectDown();
 }
@@ -339,6 +360,12 @@ function runQueue(queue) {
   if (!act) { roundEnd(); return; }
   const a = act.actor;
   if (a.hp <= 0) { runQueue(queue); return; }
+  // 时运·眩晕：跳过本回合行动
+  if (a.stun > 0) {
+    a.stun--;
+    blog(actorName(a) + " 晕头转向，无法行动！");
+    runQueue(queue); return;
+  }
   if (act.type === "atk") {
     if (act.target.hp <= 0) { runQueue(queue); return; }
     physAtk(a, act.target, act.mult || 1, act.label);
@@ -504,6 +531,17 @@ function roundEnd() {
   if (B.strat && B.strat.type === "mpRegen") {
     for (const h of aliveHeroes()) h.mp = Math.min(h.maxMp, h.mp + B.strat.value);
   }
+  // 时运·起火灼烧：每回合 5 伤
+  for (const e of aliveEnemies()) {
+    if (e.burn > 0) {
+      e.burn--;
+      e.hp = Math.max(0, e.hp - 5);
+      blog(e.name + " 被火焰灼烧，受到 5 点伤害" + (e.hp <= 0 ? "，倒下了！" : "。"));
+      afterEnemyDamaged(e);
+    }
+  }
+  if (B.over) return;
+  if (!aliveEnemies().length) { onEnemiesCleared(null); return; }
   B.round++;
   // 固定败战：第 2 回合起敌方属性×3（确保必败）
   if (B.scriptedLoss && B.round >= 2 && !B.buffed3x) {

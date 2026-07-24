@@ -10,14 +10,18 @@ MAPS["ch05_gucheng"] = {
     "R..BBBB....T...R",
     "R..BDBB........R",
     "R..............R",
-    "R....T.....T...R",
-    "R..............R",
+    "R...,T.....T...R",
+    "R...,..........R",
     "G,,,,,,,,,,,,..R",
     "R..........T...R",
     "R..T........T..R",
     "RRRRRRRRRRRRRRRR",
   ],
   encounterTiles: [],
+  // 建筑招牌（画在顶部居中的 B 格上）
+  signs: [
+    { x: 4,  y: 2, text: "客", color: "#ffd166" },
+  ],
   npcs: [
     { id: "inn", x: 4, y: 5, color: "#c98a4b", name: "旅店老板", shop: "ch05g_inn" },
     // 张飞：释疑后在城中，收束本章

@@ -59,7 +59,7 @@ function newHero(key, lv) {
   const h = {
     key: key, lv: lv, exp: expForLevel(lv),
     hp: 0, mp: 0,
-    equips: { weapon: null, armor: null, acc: null },
+    equips: { weapon: null, armor: null, helmet: null, legs: null, acc: null },
     skills: [], auto: !!tpl.auto, color: tpl.color,
   };
   for (let l = 1; l <= lv; l++) {
@@ -259,7 +259,7 @@ window.addEventListener("DOMContentLoaded", () => {
     const r = await loadGame();
     if (r === "ok") { hide("scr-title"); toast("读档成功"); }
     else if (r === "incompatible") toast("旧版本存档不兼容，请开始新游戏");
-    else toast("没有存档或连不上服务端");
+    else toast("没有找到存档");
   });
 
   if ("ontouchstart" in window) show("dpad");

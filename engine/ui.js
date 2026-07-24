@@ -94,11 +94,13 @@ function openShop(shopId) {
     });
   } else if (shop.type === "equip") {
     const pm = shop.priceMult || 1;   // 战时加价（第七章 priceMult 1.2）
-    openPanel("武器店", body => {
+    openPanel(shop.title || "武器店", body => {
       body.appendChild(line(shop.text));
       body.appendChild(line("所持金：" + S.gold + "（购买后放入装备仓库，菜单→装备 穿戴）"));
       for (const id of shop.stock) {
         const it = ITEMS[id];
+        // filter：拆分武器店/防具店后按装备类型过滤（如 ["weapon"] / ["armor","helmet","legs","acc"]）
+        if (shop.filter && shop.filter.indexOf(it.type) < 0) continue;
         const price = Math.floor(it.price * pm);
         body.appendChild(btn(id + "　" + it.desc + "　" + price + "金", () => {
           if (S.gold < price) { toast("钱不够！"); return; }
@@ -114,7 +116,7 @@ function openShop(shopId) {
     });
   } else {
     const pm = shop.priceMult || 1;
-    openPanel("杂货店", body => {
+    openPanel(shop.title || "杂货店", body => {
       body.appendChild(line(shop.text));
       body.appendChild(line("所持金：" + S.gold));
       for (const id of shop.stock) {
@@ -136,16 +138,16 @@ function openShop(shopId) {
   }
 }
 
-// 出售页：仓库装备（未穿戴的实例）+ 背包消耗品，售价=买价 40%（向下取整）；nosell 不可售
+// 出售页：仓库装备（未穿戴的实例）+ 背包消耗品，售价=买价 50%（向下取整）；nosell 不可售
 function openSell(shopId) {
   S.mode = "shop";
   openPanel("出售", body => {
-    body.appendChild(line("收购价为售价的四成。所持金：" + S.gold));
+    body.appendChild(line("收购价为售价的五成。所持金：" + S.gold));
     let any = false;
     // 仓库里未穿戴的装备实例（含强化品，按基础价算）
     S.equips.filter(e => !e.on && !ITEMS[e.id].nosell).forEach(inst => {
       const it = ITEMS[inst.id];
-      const price = Math.floor(it.price * 0.4);
+      const price = Math.floor(it.price * 0.5);
       any = true;
       body.appendChild(btn(inst.id + (inst.plus ? "+" + inst.plus : "") + "　卖 " + price + " 金", () => {
         S.equips.splice(S.equips.indexOf(inst), 1);
@@ -158,7 +160,7 @@ function openSell(shopId) {
     for (const id in S.inv) {
       const it = ITEMS[id];
       if (!it || S.inv[id] <= 0 || it.nosell || it.type !== "item") continue;
-      const price = Math.floor(it.price * 0.4);
+      const price = Math.floor(it.price * 0.5);
       any = true;
       body.appendChild(btn(id + " ×" + S.inv[id] + "　卖 " + price + " 金/件", () => {
         S.inv[id]--;
@@ -175,7 +177,8 @@ function openSell(shopId) {
 }
 
 // ---------------- 装备页（仓库实例穿戴/卸下/换装） ----------------
-const SLOT_LABEL = { weapon: "武器", armor: "防具", acc: "饰品" };
+const SLOTS = ["weapon", "armor", "helmet", "legs", "acc"];
+const SLOT_LABEL = { weapon: "武器", armor: "防具", helmet: "头盔", legs: "护腿", acc: "饰品" };
 
 // 槽位显示名：uid → 实例 → "铁剑+2"
 function equipName(h, slot) {
@@ -189,8 +192,8 @@ function equipName(h, slot) {
 function showEquip() {
   openPanel("装备", body => {
     for (const h of S.party) {
-      body.appendChild(btn(h.key + "　" + equipName(h, "weapon") + " / " +
-        equipName(h, "armor") + " / " + equipName(h, "acc"), () => showEquipHero(h.key)));
+      body.appendChild(btn(h.key + "　" +
+        SLOTS.map(s => equipName(h, s)).join(" / "), () => showEquipHero(h.key)));
     }
     body.appendChild(line("—— 装备仓库 ——"));
     const spare = S.equips.filter(e => !e.on);
@@ -203,7 +206,7 @@ function showEquip() {
 function showEquipHero(key) {
   const h = S.party.find(x => x.key === key);
   openPanel(h.key + " 的装备", body => {
-    for (const slot of ["weapon", "armor", "acc"]) {
+    for (const slot of SLOTS) {
       body.appendChild(btn(SLOT_LABEL[slot] + "：" + equipName(h, slot),
         () => showEquipSlot(h, slot)));
     }
@@ -358,6 +361,104 @@ function openSmith() {
   });
 }
 
+// ---------------- 酒馆 · 樗蒲（facility: "tavern"） ----------------
+// 五木各黑白两面，按黑面数判定。本钱不足 500 不招待；赌注 30/50/100。
+// 首次全黑：赠成长性武器【时运】（替代奖金）；首次全白：额外扣 500 金但获得藏宝线索。
+// 常规：4黑/3黑 赢单倍；2黑/1黑 输单倍；之后全黑赢 3 倍、全白输 3 倍。
+function openGamble() {
+  S.mode = "menu";
+  openPanel("酒馆 · 樗蒲", body => {
+    body.appendChild(line("店家：五木一掷，黑多者胜！押 30 / 50 / 100 金，客官请。"));
+    body.appendChild(line("所持金：" + S.gold + "（本钱不足 500 金，恕不招待）"));
+    for (const bet of [30, 50, 100]) {
+      body.appendChild(btn("押 " + bet + " 金", () => {
+        if (S.gold < 500) { toast("本钱不足 500，恕不招待！"); return; }
+        rollChupu(bet);
+      }));
+    }
+    body.appendChild(btn("离开", closePanel, "ghost"));
+  });
+}
+
+function rollChupu(bet) {
+  const woods = [0, 1, 2, 3, 4].map(() => Math.random() < 0.5);
+  const black = woods.filter(Boolean).length;
+  const face = woods.map(b => b ? "黑" : "白").join(" ");
+  let msg;
+  if (black === 5) {
+    if (!S.flags.chupu_first_black) {
+      S.flags.chupu_first_black = true;
+      addEquipInst("时运");
+      msg = "五木全黑！天降鸿运——店家捧出宝刃【时运】相赠！（已入装备仓库）";
+    } else {
+      S.gold += bet * 3;
+      msg = "五木全黑！大杀三方，赢 " + (bet * 3) + " 金！";
+    }
+  } else if (black === 0) {
+    if (!S.flags.chupu_first_white) {
+      S.flags.chupu_first_white = true;
+      S.flags.tavern_clue = true;
+      S.gold -= (bet + 500);
+      msg = "五木全白！晦气透顶，额外赔上 500 金……店家看你可怜，附耳一句：" +
+        "城西山洞深处藏着前朝遗宝。（藏宝洞已现于徐州野外）";
+    } else {
+      S.gold -= bet * 3;
+      msg = "五木全白！血本无归，输 " + (bet * 3) + " 金……";
+    }
+  } else if (black >= 3) {
+    S.gold += bet;
+    msg = black + " 黑！小胜一手，赢 " + bet + " 金。";
+  } else {
+    S.gold -= bet;
+    msg = black + " 黑……输了 " + bet + " 金。";
+  }
+  hud();
+  openPanel("樗蒲 · 开！", body => {
+    body.appendChild(line("五木：" + face + "（" + black + " 黑）"));
+    body.appendChild(line(msg));
+    body.appendChild(line("所持金：" + S.gold));
+    body.appendChild(btn("再来一局", openGamble));
+    body.appendChild(btn("离开", closePanel, "ghost"));
+  });
+}
+
+// ---------------- 训练所（facility: "dojo"） ----------------
+// 花钱买经验：出战全员各得 expToNext(队均Lv)×25%（后备减半），收费 = 经验 × 6 金
+// （刷怪约 2 金/经验，训练所 3 倍价——买的是省事与安全）
+function dojoOffer() {
+  const avgLv = Math.max(1, Math.round(S.party.reduce((s, h) => s + h.lv, 0) / S.party.length));
+  const exp = Math.round(expToNext(avgLv) * 0.25);
+  return { exp: exp, fee: exp * 6 };
+}
+function openDojo() {
+  S.mode = "menu";
+  const o = dojoOffer();
+  openPanel("训练所", body => {
+    if (!isFinite(o.exp)) {
+      body.appendChild(line("教头：诸位已臻化境，老夫没什么可教的了。"));
+      body.appendChild(btn("离开", closePanel, "ghost"));
+      return;
+    }
+    body.appendChild(line("教头：流血流汗不流泪！特训一次，出战全员各得 " + o.exp +
+      " 经验（后备减半），收费 " + o.fee + " 金。"));
+    body.appendChild(line("所持金：" + S.gold));
+    body.appendChild(btn("特训一次（" + o.fee + " 金）", () => {
+      if (S.gold < o.fee) { toast("钱不够！"); return; }
+      S.gold -= o.fee;
+      for (const h of S.party) {
+        const r = gainExp(h, o.exp);
+        if (r.levels > 0) toast(h.key + " 升到了 Lv " + h.lv + "！");
+        if (r.learned.length) toast(h.key + " 习得 " + r.learned.join("、"));
+      }
+      for (const h of S.bench) gainExp(h, Math.round(o.exp / 2));
+      toast("特训完成，全员经验 +" + o.exp);
+      hud();
+      openDojo();
+    }));
+    body.appendChild(btn("离开", closePanel, "ghost"));
+  });
+}
+
 // ---------------- 对话选项（flavor：只改一句台词，不影响结果） ----------------
 // schema：{ask: {title?, say?, options: [{label, say?, do?}]}}，选完继续后续动作
 function askChoice(ask, done) {
@@ -419,13 +520,13 @@ function openMenu() {
     body.appendChild(btn("存档", async () => {
       toast("存档中……");
       const ok = await saveGame();
-      toast(ok ? "✔ 存档成功（已存到电脑服务端）" : "✖ 存档失败：连不上服务端");
+      toast(ok ? "✔ 存档成功（已存到本机浏览器）" : "✖ 存档失败：浏览器存储不可用");
     }));
     body.appendChild(btn("读档", async () => {
       const r = await loadGame();
       if (r === "ok") { toast("读档成功"); closePanel(); }
       else if (r === "incompatible") toast("旧版本存档不兼容，请开始新游戏");
-      else toast("没有存档或连不上服务端");
+      else toast("没有找到存档");
     }));
     body.appendChild(btn("关闭", closePanel, "ghost"));
   });
@@ -459,8 +560,8 @@ function showStatus() {
       body.appendChild(line("　HP " + h.hp + "/" + h.maxHp + "　MP " + h.mp + "/" + h.maxMp));
       body.appendChild(line("　攻" + atkTotal(h) + "　防" + defTotal(h) + "　智" + intTotal(h) +
         "　速" + spdTotal(h) + "　运" + luckTotal(h)));
-      body.appendChild(line("　装备：" + equipName(h, "weapon") + " / " +
-        equipName(h, "armor") + " / " + equipName(h, "acc")));
+      body.appendChild(line("　装备：" +
+        SLOTS.map(s => equipName(h, s)).join(" / ")));
       body.appendChild(line("　谋略：" + h.skills.map(sid => SKILLS[sid].name).join("、")));
     }
     body.appendChild(btn("返回", openMenu, "ghost"));

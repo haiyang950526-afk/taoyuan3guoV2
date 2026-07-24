@@ -4,6 +4,7 @@
 // 地图字符说明：
 //   # 城墙  B 建筑  D 店门  G 城门  T 树  W 水  R 山石/洞壁  P 宫殿
 //   C 山洞入口  F 洞内地面  E 洞内出口  M 渡口木板  . 草地  , 道路（不遇敌）
+//   L 室内木地板  X 殿柱
 const TILE_META = {
   "#": { pass: false, name: "wall" },
   "B": { pass: false, name: "building" },
@@ -19,6 +20,8 @@ const TILE_META = {
   "M": { pass: true,  name: "dock" },
   ".": { pass: true,  name: "grass" },
   ",": { pass: true,  name: "road" },
+  "L": { pass: true,  name: "floor" },
+  "X": { pass: false, name: "pillar" },
 };
 
 // ---------------- 条件 / 文本 / 动作 ----------------
@@ -147,6 +150,7 @@ const TILE_COLORS = {
   "F": ["#3a332c", "#332c26"], "E": ["#c9b89a", "#3a332c"],
   "P": ["#7a5a8a", "#5a4068"], "M": ["#a8845a", "#8a6a45"],
   ".": ["#4f8a45", "#467a3d"], ",": ["#a89468", "#9a885e"],
+  "L": ["#9a7a52", "#8a6a45"], "X": ["#7a4a3a", "#5a3428"],
 };
 
 function draw() {
@@ -174,7 +178,20 @@ function draw() {
       else if (ch === "D") ctx.fillRect(tx*TILE+10, ty*TILE+4, 12, 26);
       else if (ch === "G") { ctx.fillRect(tx*TILE+4, ty*TILE+2, 24, 6); }
       else if (ch === "E") { ctx.fillRect(tx*TILE+8, ty*TILE+8, 16, 4); ctx.fillRect(tx*TILE+8, ty*TILE+16, 16, 4); }
+      else if (ch === ",") { ctx.fillRect(tx*TILE+2, ty*TILE+6, 12, 9); ctx.fillRect(tx*TILE+18, ty*TILE+17, 12, 9); }
+      else if (ch === "L") ctx.fillRect(tx*TILE, ty*TILE+15, TILE, 2);
+      else if (ch === "X") { ctx.beginPath(); ctx.arc(tx*TILE+16, ty*TILE+16, 10, 0, Math.PI*2); ctx.fill(); }
     }
+  }
+  // 建筑招牌（数据驱动：地图可选字段 signs: [{x, y, text, color}]，画在 tile 之上）
+  for (const sg of (mapDef().signs || [])) {
+    const sgx = (sg.x - c.x) * TILE, sgy = (sg.y - c.y) * TILE;
+    if (sgx < -TILE || sgy < -TILE || sgx > VW * TILE || sgy > VH * TILE) continue;
+    ctx.fillStyle = sg.color || "#ffd166";
+    ctx.font = "bold 16px sans-serif";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText(sg.text, sgx + TILE / 2, sgy + TILE / 2);
+    ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
   }
   // 宝箱（已开启的画成空箱，仍可通行）
   for (const ch2 of (mapDef().chests || [])) {
@@ -308,6 +325,9 @@ function interact() {
     openCamp(); return;
   }
   if (n.facility === "smith") { openSmith(); return; }
+  // 酒馆（樗蒲赌局）/ 训练所（花钱买经验），面板见 ui.js
+  if (n.facility === "tavern") { openGamble(); return; }
+  if (n.facility === "dojo") { openDojo(); return; }
   if (n.boss) { triggerBoss(n); return; }
   if (n.branches) {
     const br = n.branches.find(b => !b.if || evalCond(b.if));

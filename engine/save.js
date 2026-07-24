@@ -1,9 +1,9 @@
-// 引擎 · 存档（v4 结构；纯静态部署版：存浏览器 localStorage，无需后端）
-// v4 = v3 + 编成(bench)/军师(strategist)/阵形(formation)/强化(enhance)/图鉴(dex)/分线(stash) + 装备实例化
-// v2/v3 旧档经 formulas.js migrateSave 逐级迁移；v1 提示不兼容
+// 引擎 · 存档（v5 结构；纯静态部署版：存浏览器 localStorage，无需后端）
+// v5 = v4 + 装备五槽（头盔 helmet / 护腿 legs）
+// v2/v3/v4 旧档经 formulas.js migrateSave 逐级迁移；v1 提示不兼容
 "use strict";
 
-const SAVE_V = 4;
+const SAVE_V = 5;
 const SAVE_KEY = "taoyuan3g_save";
 
 // 角色实例 → 存档条目
@@ -16,7 +16,7 @@ function unpackHero(p) {
   h.exp = p.exp;
   h.hp = Math.min(p.hp, h.maxHp);
   h.mp = Math.min(p.mp, h.maxMp);
-  h.equips = p.equips || { weapon: null, armor: null, acc: null };
+  h.equips = p.equips || { weapon: null, armor: null, helmet: null, legs: null, acc: null };
   h.skills = p.skills || h.skills;
   return h;
 }

@@ -8,7 +8,9 @@
 const CHAPTERS = {
   ch00: {
     name: "序章 · 徐州剿匪",
-    maps: ["ch00_city", "ch00_field", "ch00_cave"],
+    maps: ["ch00_city", "ch00_field", "ch00_cave", "ch00_cave2", "ch00_cave3",
+           "ch00_palace", "ch00_inn_in", "ch00_weapon_in", "ch00_armor_in",
+           "ch00_item_in", "ch00_tavern_in", "ch00_dojo_in"],
     start: { map: "ch00_city", x: 10, y: 16 },
     home: { map: "ch00_city", x: 10, y: 16 },
     questFlag: "q0",
@@ -21,7 +23,7 @@ const CHAPTERS = {
   },
   ch01: {
     name: "第一章 · 父仇之火",
-    maps: ["ch00_city", "ch00_field", "ch01_field", "ch01_tancheng", "ch01_sishui"],
+    maps: ["ch00_city", "ch00_field", "ch00_palace", "ch01_field", "ch01_cave2", "ch01_tancheng", "ch01_sishui"],
     start: { map: "ch00_city", x: 10, y: 16 },
     home: { map: "ch00_city", x: 10, y: 16 },
     questFlag: "q1",
@@ -37,7 +39,7 @@ const CHAPTERS = {
   },
   ch02: {
     name: "第二章 · 三让徐州",
-    maps: ["ch00_city", "ch00_field", "ch02_field_east", "ch02_xiaopei",
+    maps: ["ch00_city", "ch00_field", "ch00_palace", "ch02_field_east", "ch02_cave2", "ch02_xiaopei",
            "ch02_field_south", "ch02_xiapi", "ch02_huaishui"],
     start: { map: "ch00_city", x: 10, y: 5 },
     home: { map: "ch02_xiaopei", x: 10, y: 16 },
