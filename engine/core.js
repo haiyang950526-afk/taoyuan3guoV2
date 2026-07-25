@@ -91,7 +91,20 @@ function joinBench(key) {   // 收服战：直接加入后备
   const lv = S.party.reduce((m, h) => Math.max(m, h.lv), 1);
   S.bench.push(newHero(key, lv));
 }
+// 角色离队/分线暂存前：脱下全部装备，实例放回仓库（防止装备随人"消失"）
+function unequipHero(h) {
+  for (const slot of SLOTS) {
+    const uid = h.equips && h.equips[slot];
+    if (!uid) continue;
+    const inst = findEquipInst(uid);
+    if (inst) inst.on = null;
+    h.equips[slot] = null;
+  }
+}
+
 function leaveHero(key) {
+  const leaver = S.party.concat(S.bench).find(h => h.key === key);
+  if (leaver) unequipHero(leaver);
   S.party = S.party.filter(h => h.key !== key);
   S.bench = S.bench.filter(h => h.key !== key);
   if (S.strategist === key) S.strategist = null;

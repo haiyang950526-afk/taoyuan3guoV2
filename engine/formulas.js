@@ -79,15 +79,22 @@ function luckTotal(h) { return h.stats.luck + equipBonus(h, "luck"); }
 
 // 物理伤害（03 文档）：
 //   基础 = 攻 × 倍率 × (0.90~1.10)；伤害 = max(1, 基础 - 防/2)
-//   暴击：概率 运/2 %，伤害 ×1.5（先取整再乘）
+//   暴击：概率 运/2 %（+ 装备暴击率加成 critB，如铁斧头），伤害 ×1.5（先取整再乘）
 // rand 可注入（测试用），返回 {dmg, crit}
-function physDmg(atk, mult, def, luck, rand) {
+function physDmg(atk, mult, def, luck, rand, critB) {
   rand = rand || Math.random;
   var base = atk * (mult || 1) * (0.9 + rand() * 0.2);
   var dmg = Math.max(1, Math.round(base - def / 2));
-  var crit = rand() * 100 < luck / 2;
+  var crit = rand() * 100 < luck / 2 + (critB || 0);
   if (crit) dmg = Math.round(dmg * 1.5);
   return { dmg: dmg, crit: crit };
+}
+
+// 攻击者的装备暴击率加成（目前只有饰品位铁斧头）
+function critBonusOf(h) {
+  if (typeof equipOf !== "function" || !h || !h.equips) return 0;
+  var e = equipOf(h, "acc");
+  return e && e.item.crit ? e.item.crit : 0;
 }
 
 // 计策伤害（03 文档）：基础 = 智 × 系数 × (0.90~1.10)；伤害 = max(1, 基础 - 敌智/3)

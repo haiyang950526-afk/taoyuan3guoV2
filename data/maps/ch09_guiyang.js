@@ -8,7 +8,7 @@ MAPS["ch09_guiyang"] = {
     "#.......,,,,.........#",
     "#..BBBB...BBBB.......#",
     "#..BBBB...BBBB....T..#",
-    "#..BDBB...BBDB.......#",
+    "#..BDBB...BBDD.......#",
     "#,,,,,,,,,,,,,,,,,,,,#",
     "#...T...,,.....T.....#",
     "#.......,,...........#",
@@ -37,10 +37,7 @@ MAPS["ch09_guiyang"] = {
       lines: ["告示：四郡集市，南货北货俱全。",
               "西：旅店·杂货店　东：武器店·防具店",
               "东南：荆州游商（好货不便宜）·编成所"] },
-    { id: "inn",    x: 4,  y: 5,  color: "#c98a4b", name: "旅店老板",   shop: "ch09_inn" },
-    { id: "weapon", x: 12, y: 5,  color: "#8a93a8", name: "武器店老板", shop: "ch09_weapon" },
-    { id: "armor",  x: 13, y: 5,  color: "#b08a5a", name: "防具店老板", shop: "ch09_armor" },
-    { id: "item",   x: 4,  y: 11, color: "#7ee2a0", name: "杂货店老板", shop: "ch09_item" },
+    // 店主已迁入各自店内（门口 D 格朝门下钻）
     { id: "black",  x: 12, y: 11, color: "#b85a8a", name: "荆州游商",   shop: "ch09_black" },
     { id: "camp",   x: 16, y: 11, color: "#7a8a9a", name: "老兵", facility: "camp" },
     { id: "v1",     x: 7,  y: 7,  color: "#4f8cff", name: "市民",
@@ -57,6 +54,11 @@ MAPS["ch09_guiyang"] = {
   transitions: [
     { x: 10, y: 0,  to: { map: "ch09_field_n", x: 10, y: 10 } },
     { x: 11, y: 0,  to: { map: "ch09_field_n", x: 10, y: 10 } },
+    // 店铺室内下钻（朝门才进，路过不触发）
+    { x: 4,  y: 5,  face: [0, -1], to: { map: "ch09_inn_in", x: 4, y: 4 } },
+    { x: 12, y: 5,  face: [0, -1], to: { map: "ch09_weapon_in", x: 4, y: 4 } },
+    { x: 13, y: 5,  face: [0, -1], to: { map: "ch09_armor_in", x: 4, y: 4 } },
+    { x: 4,  y: 11, face: [0, -1], to: { map: "ch09_item_in", x: 4, y: 4 } },
   ],
 };
 

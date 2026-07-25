@@ -15,10 +15,10 @@ MAPS["ch00_field"] = {
     "R..................,T..G",
     "R......T......T....,...G",
     "R..T..............,,...R",
-    "R.........T......,.....R",
-    "R..T............,..T...R",
-    "R......T........,......R",
-    "R..T.......T....,...T..R",
+    "RBBTBB.BB.T......,.....R",
+    "RBDTDB.BD.......,..T...R",
+    "R...,..T........,......R",
+    "R..T,......T....,...T..R",
     "R....T..........,WW....R",
     "R..............,WW.....R",
     "RRRRRRRRRRGGRRRRRRRRRRRR",
@@ -36,6 +36,18 @@ MAPS["ch00_field"] = {
     { x: 13, y: 14, id: "f1", items: { "草药": 2 } },
   ],
   triggers: [
+    // 河神送斧（一次性：站在左、上都是水的河边草地触发）
+    { x: 18, y: 16, if: { flag: "river_god", not: "done" },
+      do: [{ say: "ch00.riverGod" },
+           { ask: { title: "如何回答河神？",
+             options: [
+               { label: "金斧头", do: [{ say: "ch00.riverGodGold" },
+                 { gold: 1000 }, { set: { river_god: "done" } }] },
+               { label: "银斧头", do: [{ say: "ch00.riverGodSilver" },
+                 { gold: 600 }, { set: { river_god: "done" } }] },
+               { label: "铁斧头", do: [{ say: "ch00.riverGodIron" },
+                 { giveEquip: "铁斧头" }, { set: { river_god: "done" } }] },
+             ] } }] },
     // 第四章：攻城连战（斩车胄据徐州）
     { x: 10, y: 15, if: { flag: "q4", is: "start" },
       do: [{ battle: "ch04_siege",
@@ -73,6 +85,8 @@ MAPS["ch00_field"] = {
     // 东北门：第二章起通小沛方向
     { x: 23, y: 2,  if: { flag: "q2", exists: true }, to: { map: "ch02_field_east", x: 1, y: 2 } },
     { x: 23, y: 3,  if: { flag: "q2", exists: true }, to: { map: "ch02_field_east", x: 1, y: 2 } },
+    // 徐家庄村口（西南）：朝北走进门触发
+    { x: 4, y: 13, face: [0, -1], to: { map: "ch00_village", x: 5, y: 7 } },
   ],
 };
 

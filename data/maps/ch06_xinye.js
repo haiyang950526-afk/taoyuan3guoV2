@@ -38,22 +38,7 @@ MAPS["ch06_xinye"] = {
               "东南：编成所（老兵）",
               "北门外即是旷野"] },
     // 商店：第六章价（q7 出现后隐藏）/ 第七章战时价（priceMult 1.2）
-    { id: "inn6",  x: 4, y: 5, color: "#c98a4b", name: "旅店老板", shop: "ch06_inn",
-      hideIf: { flag: "q7", exists: true } },
-    { id: "inn7",  x: 4, y: 5, color: "#c98a4b", name: "旅店老板", shop: "ch07_inn",
-      appearIf: { flag: "q7", exists: true } },
-    { id: "weapon6", x: 12, y: 5, color: "#8a93a8", name: "武器店老板", shop: "ch06_weapon",
-      hideIf: { flag: "q7", exists: true } },
-    { id: "weapon7", x: 12, y: 5, color: "#8a93a8", name: "武器店老板", shop: "ch07_weapon",
-      appearIf: { flag: "q7", exists: true } },
-    { id: "armor6", x: 12, y: 11, color: "#b08a5a", name: "防具店老板", shop: "ch06_armor",
-      hideIf: { flag: "q7", exists: true } },
-    { id: "armor7", x: 12, y: 11, color: "#b08a5a", name: "防具店老板", shop: "ch07_armor",
-      appearIf: { flag: "q7", exists: true } },
-    { id: "item6", x: 4, y: 11, color: "#7ee2a0", name: "杂货店老板", shop: "ch06_item",
-      hideIf: { flag: "q7", exists: true } },
-    { id: "item7", x: 4, y: 11, color: "#7ee2a0", name: "杂货店老板", shop: "ch07_item",
-      appearIf: { flag: "q7", exists: true } },
+    // 商店：第六章价 / 第七章战时价双店主，均已迁入各自店内（门口 D 格朝门下钻）
     { id: "camp", x: 16, y: 11, color: "#7a8a9a", name: "老兵", facility: "camp" },
     { id: "v1", x: 7, y: 7, color: "#4f8cff", name: "村民", linesKey: "ch06.xinyeVillager" },
     { id: "v2", x: 15, y: 13, color: "#d88a3a", name: "老者", linesKey: "ch06.xyVillager" },
@@ -77,7 +62,7 @@ MAPS["ch06_xinye"] = {
         { say: ["三处匪首尚未平定，报信兵指着城外的地图。"] },
       ] },
     // 第七章：夏侯惇来攻
-    { id: "xy_soldier7", x: 12, y: 5, color: "#9aa4b8", name: "报信兵",
+    { id: "xy_soldier7", x: 14, y: 5, color: "#9aa4b8", name: "报信兵",
       appearIf: { flag: "q7", is: "start" },
       branches: [
         { say: "ch07.baoxin",
@@ -106,6 +91,11 @@ MAPS["ch06_xinye"] = {
     // 南门：第七章起通博望坡
     { x: 10, y: 17, if: { flag: "q7", exists: true }, to: { map: "ch07_bowang", x: 10, y: 12 } },
     { x: 11, y: 17, if: { flag: "q7", exists: true }, to: { map: "ch07_bowang", x: 10, y: 12 } },
+    // 店铺室内下钻（朝门才进，路过不触发）
+    { x: 4,  y: 5,  face: [0, -1], to: { map: "ch06_inn_in", x: 4, y: 4 } },
+    { x: 12, y: 5,  face: [0, -1], to: { map: "ch06_weapon_in", x: 4, y: 4 } },
+    { x: 12, y: 11, face: [0, -1], to: { map: "ch06_armor_in", x: 4, y: 4 } },
+    { x: 4,  y: 11, face: [0, -1], to: { map: "ch06_item_in", x: 4, y: 4 } },
   ],
 };
 

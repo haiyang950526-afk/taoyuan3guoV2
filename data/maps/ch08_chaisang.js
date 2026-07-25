@@ -23,7 +23,7 @@ MAPS["ch08_chaisang"] = {
     "#.......,,,,.........#",
     "#..BBBB...BBBB.......#",
     "#..BBBB...BBBB....T..#",
-    "#..BDBB...BBDB.......#",
+    "#..BDBB...BBDD.......#",
     "#,,,,,,,,,,,,,,,,,,,,#",
     "#...T...,,.....T....,#",
     "#.......,,..........,#",
@@ -52,10 +52,7 @@ MAPS["ch08_chaisang"] = {
       lines: ["告示：西：旅店·杂货店　东：武器店·防具店",
               "东南：编成所　东门通夏口",
               "北门：三江口水寨"] },
-    { id: "inn",    x: 4,  y: 5,  color: "#c98a4b", name: "旅店老板",   shop: "ch08_inn" },
-    { id: "weapon", x: 12, y: 5,  color: "#8a93a8", name: "武器店老板", shop: "ch08_weapon" },
-    { id: "armor",  x: 13, y: 5,  color: "#b08a5a", name: "防具店老板", shop: "ch08_armor" },
-    { id: "item",   x: 4,  y: 11, color: "#7ee2a0", name: "杂货店老板", shop: "ch08_item" },
+    // 店主已迁入各自店内（门口 D 格朝门下钻）
     { id: "camp",   x: 16, y: 11, color: "#7a8a9a", name: "老兵", facility: "camp" },
     { id: "v1",     x: 7,  y: 7,  color: "#4f8cff", name: "市民",
       lines: ["曹军八十万压境，城里人心惶惶。", "孙刘联手，才有活路啊。"] },
@@ -101,6 +98,11 @@ MAPS["ch08_chaisang"] = {
       to: { map: "ch08_xiakou", x: 1, y: 8 } },
     { x: 21, y: 9,  if: { flag: "q8", in: ["chibi", "wulin", "done"] },
       to: { map: "ch08_xiakou", x: 1, y: 8 } },
+    // 店铺室内下钻（朝门才进，路过不触发）
+    { x: 4,  y: 5,  face: [0, -1], to: { map: "ch08_inn_in", x: 4, y: 4 } },
+    { x: 12, y: 5,  face: [0, -1], to: { map: "ch08_weapon_in", x: 4, y: 4 } },
+    { x: 13, y: 5,  face: [0, -1], to: { map: "ch08_armor_in", x: 4, y: 4 } },
+    { x: 4,  y: 11, face: [0, -1], to: { map: "ch08_item_in", x: 4, y: 4 } },
   ],
 };
 

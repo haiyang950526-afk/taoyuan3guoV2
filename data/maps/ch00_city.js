@@ -63,7 +63,7 @@ MAPS["ch00_city"] = {
     // 编成所（主城设施：出战/后备调换、阵形、军师）
     { id: "camp",   x: 16, y: 11, color: "#7a8a9a", name: "老兵", facility: "camp" },
     // 曹操使者：序章任务发布人；进入第一章后离城
-    { id: "envoy",  x: 10, y: 16, color: "#b03a3a", name: "曹操使者",
+    { id: "envoy",  x: 9, y: 16, color: "#b03a3a", name: "曹操使者",
       hideIf: { flag: "q1", exists: true },
       branches: [
         { if: { flag: "q0", is: "notStarted" }, say: "ch00.envoyOffer",
@@ -96,15 +96,15 @@ MAPS["ch00_city"] = {
   transitions: [
     { x: 10, y: 17, to: { map: "ch00_field", x: 11, y: 16 } },
     { x: 11, y: 17, to: { map: "ch00_field", x: 11, y: 16 } },
-    // 太守府大殿
-    { x: 10, y: 4,  to: { map: "ch00_palace", x: 5, y: 7 } },
-    // 店铺室内下钻
-    { x: 3,  y: 9,  to: { map: "ch00_inn_in", x: 4, y: 4 } },
-    { x: 7,  y: 9,  to: { map: "ch00_tavern_in", x: 4, y: 4 } },
-    { x: 15, y: 9,  to: { map: "ch00_weapon_in", x: 4, y: 4 } },
-    { x: 19, y: 9,  to: { map: "ch00_armor_in", x: 4, y: 4 } },
-    { x: 3,  y: 14, to: { map: "ch00_item_in", x: 4, y: 4 } },
-    { x: 19, y: 14, to: { map: "ch00_dojo_in", x: 4, y: 4 } },
+    // 太守府大殿（朝北向门口多走一步才进）
+    { x: 10, y: 4,  face: [0, -1], to: { map: "ch00_palace", x: 5, y: 7 } },
+    // 店铺室内下钻（同样朝门才进，路过不触发）
+    { x: 3,  y: 9,  face: [0, -1], to: { map: "ch00_inn_in", x: 4, y: 4 } },
+    { x: 7,  y: 9,  face: [0, -1], to: { map: "ch00_tavern_in", x: 4, y: 4 } },
+    { x: 15, y: 9,  face: [0, -1], to: { map: "ch00_weapon_in", x: 4, y: 4 } },
+    { x: 19, y: 9,  face: [0, -1], to: { map: "ch00_armor_in", x: 4, y: 4 } },
+    { x: 3,  y: 14, face: [0, -1], to: { map: "ch00_item_in", x: 4, y: 4 } },
+    { x: 19, y: 14, face: [0, -1], to: { map: "ch00_dojo_in", x: 4, y: 4 } },
   ],
 };
 

@@ -188,7 +188,7 @@ function pickTarget(cb) {
   cmd.innerHTML = "";
   cmd.appendChild(line("—— 选择目标 ——"));
   for (const e of aliveEnemies()) {
-    cmd.appendChild(btn(e.name + "（HP " + e.hp + "/" + e.maxHp + "）", () => cb(e)));
+    cmd.appendChild(btn(e.name, () => cb(e)));
   }
   cmd.appendChild(btn("返回", battleInput, "ghost"));
 }
@@ -197,7 +197,7 @@ function pickAlly(cb) {
   cmd.innerHTML = "";
   cmd.appendChild(line("—— 选择队友 ——"));
   for (const h of S.party) {
-    if (h.hp > 0) cmd.appendChild(btn(h.key + "（HP " + h.hp + "/" + h.maxHp + "）", () => cb(h)));
+    if (h.hp > 0) cmd.appendChild(btn(h.key, () => cb(h)));
   }
   cmd.appendChild(btn("返回", battleInput, "ghost"));
 }
@@ -280,7 +280,8 @@ function physAtk(attacker, target, mult, label) {
     ? target.def * target.defBuff
     : bStat(target, "def") * (target.defBuffHero || 1);
   const luck = isEnemy(attacker) ? attacker.luck : bStat(attacker, "luck");
-  const r = physDmg(atk, mult, def, luck);
+  const r = physDmg(atk, mult, def, luck, undefined,
+    isEnemy(attacker) ? 0 : critBonusOf(attacker));
   let dmg = r.dmg;
   if (target.defending) dmg = Math.max(1, Math.floor(dmg / 2));
   target.hp = Math.max(0, target.hp - dmg);
@@ -499,7 +500,8 @@ function physAtkSkill(attacker, target, sk, quiet) {
     ? target.def * target.defBuff
     : bStat(target, "def") * (target.defBuffHero || 1);
   // 武技倍率 × 等级缩放
-  const r = physDmg(atk, sk.mult * skillScale(attacker.lv), def, bStat(attacker, "luck"));
+  const r = physDmg(atk, sk.mult * skillScale(attacker.lv), def, bStat(attacker, "luck"),
+    undefined, critBonusOf(attacker));
   target.hp = Math.max(0, target.hp - r.dmg);
   if (!quiet) blog(actorName(attacker) + " 的" + sk.name + "！");
   blog(actorName(target) + " 受到 " + r.dmg + " 点伤害" + (r.crit ? "（暴击！）" : "") +
@@ -786,7 +788,7 @@ function drawBattle() {
     ctx.fillStyle = "#e8ecf4";
     ctx.font = "13px sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText(e.name, x + (e.boss ? 40 : 32), y + 122);
+    ctx.fillText(e.name + "  " + e.hp + "/" + e.maxHp, x + (e.boss ? 40 : 32), y + 122);
   });
   // 我方（下排，最多 5 人 + 军师标识）
   S.party.forEach((h, i) => {
@@ -795,9 +797,9 @@ function drawBattle() {
     drawBattleSprite(x + 2, y - 16, 3, heroLook(h.key), false);
     ctx.globalAlpha = 1;
     ctx.fillStyle = "#e8ecf4";
-    ctx.font = "13px sans-serif";
+    ctx.font = "12px sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText(h.key + (h.auto ? "·援" : ""), x + 26, y + 58);
+    ctx.fillText(h.key + (h.auto ? "·援" : "") + "  " + h.hp + "/" + h.maxHp, x + 26, y + 58);
     ctx.fillStyle = "#333";
     ctx.fillRect(x, y + 64, 52, 5);
     ctx.fillStyle = "#7ee2a0";

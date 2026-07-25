@@ -42,6 +42,7 @@ const ITEMS = {
   // 饰品（特殊效果）
   "护心镜": { type: "acc", def: 3, price: 1500, desc: "护住心口的铜镜，防御+3" },
   "玉佩":   { type: "acc", int: 3, price: 2000, desc: "温润古玉，智力+3" },
+  "铁斧头": { type: "acc", crit: 10, price: 0, nosell: true, desc: "河神所赠铁斧，暴击率+10%（唯一）" },
   "诸葛巾": { type: "acc", int: 20, price: 30000, nosell: true, desc: "名品彩蛋：武侯纶巾，智力+20" },
   // 头盔（def，约为同代铠甲一半）
   "皮帽":   { type: "helmet", def: 1,  price: 100,   desc: "皮革软帽，防御+1" },
@@ -145,6 +146,9 @@ const SHOPS = {
   ch11_weapon: { type: "equip", title: "武器店", filter: ["weapon"], stock: ["龙泉剑", "雌雄双股剑", "龙胆枪", "七星剑", "白银剑"], text: "军需官：名品限量，只卖识货之人。" },
   ch11_armor:  { type: "equip", title: "防具店", filter: ["armor", "helmet", "legs", "acc"], stock: ["龙鳞铠", "龙鳞盔", "龙鳞护腿", "诸葛巾", "白银铠", "白银盔", "白银护腿"], text: "军需官：宝铠宝盔，北伐专用。" },
   ch11_item:   { type: "item", stock: ["仙草露", "甘露", "返魂香", "诸葛连弩图"], text: "军需药材，北伐专用。" },
+  // 通用村店（所有野外村庄共用）
+  vil_inn:     { type: "inn", cost: 50, text: "村店简陋，50金一晚，被褥倒是干净。" },
+  vil_item:    { type: "item", stock: ["草药", "金疮药", "清泉"], text: "村里的小药铺，土药齐全。" },
 };
 
 if (typeof module !== "undefined") module.exports = { ITEMS: ITEMS, SHOPS: SHOPS };

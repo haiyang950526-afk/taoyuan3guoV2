@@ -12,7 +12,7 @@ MAPS["ch03_xudu"] = {
     "#....T..,,.......T.....#",
     "#..BBBB.,,.BBBB........#",
     "#..BBBB.,,.BBBB....T...#",
-    "#..BDBB.,,.BBDB........#",
+    "#..BDBB.,,.BDBD........#",
     "#,,,,,,,,,,,,,,,,,,,,,,#",
     "#...T...,,......T......#",
     "#.......,,.............#",
@@ -43,10 +43,7 @@ MAPS["ch03_xudu"] = {
       lines: ["告示：北：皇宫　南：相府",
               "西街：旅店·杂货店　东街：武器店·防具店",
               "东南：酒馆·训练所"] },
-    { id: "inn",    x: 4,  y: 9,  color: "#c98a4b", name: "旅店老板",   shop: "ch03_inn" },
-    { id: "weapon", x: 12, y: 9,  color: "#8a93a8", name: "武器店老板", shop: "ch03_weapon" },
-    { id: "armor",  x: 14, y: 9,  color: "#b08a5a", name: "防具店老板", shop: "ch03_armor" },
-    { id: "item",   x: 4,  y: 15, color: "#7ee2a0", name: "杂货店老板", shop: "ch03_item" },
+    // 店主已迁入各自店内（门口 D 格朝门下钻）
     // 酒馆（樗蒲）与训练所：东南楼下露天
     { id: "tavern", x: 12, y: 15, color: "#b08a4a", name: "酒馆老板", facility: "tavern" },
     { id: "dojo",   x: 14, y: 15, color: "#8a7a6a", name: "教头", facility: "dojo" },
@@ -87,6 +84,11 @@ MAPS["ch03_xudu"] = {
   transitions: [
     { x: 10, y: 19, to: { map: "ch03_field", x: 11, y: 1 } },
     { x: 11, y: 19, to: { map: "ch03_field", x: 11, y: 1 } },
+    // 店铺室内下钻（朝门才进，路过不触发）
+    { x: 4,  y: 9,  face: [0, -1], to: { map: "ch03_inn_in", x: 4, y: 4 } },
+    { x: 12, y: 9,  face: [0, -1], to: { map: "ch03_weapon_in", x: 4, y: 4 } },
+    { x: 14, y: 9,  face: [0, -1], to: { map: "ch03_armor_in", x: 4, y: 4 } },
+    { x: 4,  y: 15, face: [0, -1], to: { map: "ch03_item_in", x: 4, y: 4 } },
   ],
 };
 

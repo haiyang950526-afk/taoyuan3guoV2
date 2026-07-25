@@ -8,7 +8,7 @@ MAPS["ch02_xiaopei"] = {
     "#.......,,,,.........#",
     "#..BBBB...BBBB.......#",
     "#..BBBB...BBBB....T..#",
-    "#..BDBB...BBDB.......#",
+    "#..BDBB...BBDD.......#",
     "#,,,,,,,,,,,,,,,,,,,,#",
     "#...T...,,.....T.....#",
     "#.......,,...........#",
@@ -37,10 +37,7 @@ MAPS["ch02_xiaopei"] = {
       lines: ["告示：西：旅店·杂货店　东：武器店·防具店",
               "东南：编成所（老兵）　南门通往下邳方向",
               "北门外即是旷野"] },
-    { id: "inn",    x: 4,  y: 5,  color: "#c98a4b", name: "旅店老板",   shop: "ch02_inn" },
-    { id: "weapon", x: 12, y: 5,  color: "#8a93a8", name: "武器店老板", shop: "ch02_weapon" },
-    { id: "armor",  x: 13, y: 5,  color: "#b08a5a", name: "防具店老板", shop: "ch02_armor" },
-    { id: "item",   x: 4,  y: 11, color: "#7ee2a0", name: "杂货店老板", shop: "ch02_item" },
+    // 店主已迁入各自店内（门口 D 格朝门下钻）
     { id: "v1",     x: 6,  y: 7,  color: "#4f8cff", name: "村民", linesKey: "ch02.xpVillager" },
     { id: "v2",     x: 15, y: 13, color: "#d88a3a", name: "老者", linesKey: "ch02.xpElder" },
     // 编成所
@@ -77,6 +74,11 @@ MAPS["ch02_xiaopei"] = {
     // 南门：辕门射戟后才可往下邳方向
     { x: 10, y: 17, if: { flag: "q2", in: ["shed", "lost", "done"] }, to: { map: "ch02_field_south", x: 10, y: 1 } },
     { x: 11, y: 17, if: { flag: "q2", in: ["shed", "lost", "done"] }, to: { map: "ch02_field_south", x: 10, y: 1 } },
+    // 店铺室内下钻（朝门才进，路过不触发）
+    { x: 4,  y: 5,  face: [0, -1], to: { map: "ch02_inn_in", x: 4, y: 4 } },
+    { x: 12, y: 5,  face: [0, -1], to: { map: "ch02_weapon_in", x: 4, y: 4 } },
+    { x: 13, y: 5,  face: [0, -1], to: { map: "ch02_armor_in", x: 4, y: 4 } },
+    { x: 4,  y: 11, face: [0, -1], to: { map: "ch02_item_in", x: 4, y: 4 } },
   ],
 };
 

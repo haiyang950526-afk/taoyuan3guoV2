@@ -8,7 +8,7 @@ MAPS["ch02_xiapi"] = {
     "#.......,,,,.........#",
     "#..BBBB...BBBB.......#",
     "#..BBBB...BBBB....T..#",
-    "#..BDBB...BBDB.......#",
+    "#..BDBB...BBDD.......#",
     "#,,,,,,,,,,,,,,,,,,,,#",
     "#...T...,,.....T.....#",
     "#.......,,...........#",
@@ -38,10 +38,7 @@ MAPS["ch02_xiapi"] = {
       lines: ["告示：西：旅店·杂货店　东：武器店·防具店",
               "东南：铁匠铺（武器强化）",
               "南门通向淮水渡口"] },
-    { id: "inn",    x: 4,  y: 5,  color: "#c98a4b", name: "旅店老板",   shop: "ch02b_inn" },
-    { id: "weapon", x: 12, y: 5,  color: "#8a93a8", name: "武器店老板", shop: "ch02b_weapon" },
-    { id: "armor",  x: 13, y: 5,  color: "#b08a5a", name: "防具店老板", shop: "ch02b_armor" },
-    { id: "item",   x: 4,  y: 11, color: "#7ee2a0", name: "杂货店老板", shop: "ch02b_item" },
+    // 店主已迁入各自店内（门口 D 格朝门下钻）
     // 失下邳前后，城中人口风不同
     { id: "v1", x: 7, y: 7, color: "#4f8cff", name: "村民",
       branches: [
@@ -59,6 +56,11 @@ MAPS["ch02_xiapi"] = {
     { x: 11, y: 0,  to: { map: "ch02_field_south", x: 15, y: 16 } },
     { x: 10, y: 17, to: { map: "ch02_huaishui", x: 11, y: 1 } },
     { x: 11, y: 17, to: { map: "ch02_huaishui", x: 11, y: 1 } },
+    // 店铺室内下钻（朝门才进，路过不触发）
+    { x: 4,  y: 5,  face: [0, -1], to: { map: "ch02b_inn_in", x: 4, y: 4 } },
+    { x: 12, y: 5,  face: [0, -1], to: { map: "ch02b_weapon_in", x: 4, y: 4 } },
+    { x: 13, y: 5,  face: [0, -1], to: { map: "ch02b_armor_in", x: 4, y: 4 } },
+    { x: 4,  y: 11, face: [0, -1], to: { map: "ch02b_item_in", x: 4, y: 4 } },
   ],
 };
 

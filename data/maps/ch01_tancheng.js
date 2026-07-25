@@ -8,7 +8,7 @@ MAPS["ch01_tancheng"] = {
     "#....T..,,......T....#",
     "#..BBBB...BBBB.......#",
     "#..BBBB...BBBB....T..#",
-    "#..BDBB...BBDB.......#",
+    "#..BDBB...BBDD.......#",
     "#,,,,,,,,,,,,,,,,,,,,#",
     "#...T...,,.....T.....#",
     "#.......,,...........#",
@@ -37,10 +37,7 @@ MAPS["ch01_tancheng"] = {
       lines: ["告示：东西两条大街，店铺沿街而开。",
               "西：旅店·杂货店　东：武器店·防具店",
               "东南府邸：郯城守将"] },
-    { id: "inn",    x: 4,  y: 5,  color: "#c98a4b", name: "旅店老板",   shop: "ch01_inn" },
-    { id: "weapon", x: 12, y: 5,  color: "#8a93a8", name: "武器店老板", shop: "ch01_weapon" },
-    { id: "armor",  x: 13, y: 5,  color: "#b08a5a", name: "防具店老板", shop: "ch01_armor" },
-    { id: "item",   x: 4,  y: 11, color: "#7ee2a0", name: "杂货店老板", shop: "ch01_item" },
+    // 店主已迁入各自店内（门口 D 格朝门下钻）
     { id: "v1",     x: 7,  y: 7,  color: "#4f8cff", name: "村民", linesKey: "ch01.tanVillager" },
     { id: "v2",     x: 15, y: 13, color: "#d88a3a", name: "老者", linesKey: "ch01.tanElder" },
     // 郯城守将：第一章任务链引导人
@@ -60,6 +57,11 @@ MAPS["ch01_tancheng"] = {
   transitions: [
     { x: 10, y: 17, to: { map: "ch01_field", x: 11, y: 1 } },
     { x: 11, y: 17, to: { map: "ch01_field", x: 11, y: 1 } },
+    // 店铺室内下钻（朝门才进，路过不触发）
+    { x: 4,  y: 5,  face: [0, -1], to: { map: "ch01_inn_in", x: 4, y: 4 } },
+    { x: 12, y: 5,  face: [0, -1], to: { map: "ch01_weapon_in", x: 4, y: 4 } },
+    { x: 13, y: 5,  face: [0, -1], to: { map: "ch01_armor_in", x: 4, y: 4 } },
+    { x: 4,  y: 11, face: [0, -1], to: { map: "ch01_item_in", x: 4, y: 4 } },
   ],
 };
 

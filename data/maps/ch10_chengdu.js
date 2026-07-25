@@ -8,7 +8,7 @@ MAPS["ch10_chengdu"] = {
     "#.......,,,,.........#",
     "#..BBBB...BBBB.......#",
     "#..BBBB...BBBB....T..#",
-    "#..BDBB...BBDB.......#",
+    "#..BDBB...BBDD.......#",
     "#,,,,,,,,,,,,,,,,,,,,#",
     "#...T...,,.....T....,#",
     "#.......,,..........,#",
@@ -38,10 +38,7 @@ MAPS["ch10_chengdu"] = {
       lines: ["告示：西：旅店·杂货店　东：武器店·防具店",
               "城东：酒馆（樗蒲）　东南：铁匠铺·训练所·编成所",
               "东门通向定军山方向"] },
-    { id: "inn",    x: 4,  y: 5,  color: "#c98a4b", name: "旅店老板",   shop: "ch10_inn" },
-    { id: "weapon", x: 12, y: 5,  color: "#8a93a8", name: "武器店老板", shop: "ch10_weapon" },
-    { id: "armor",  x: 13, y: 5,  color: "#b08a5a", name: "防具店老板", shop: "ch10_armor" },
-    { id: "item",   x: 4,  y: 11, color: "#7ee2a0", name: "杂货店老板", shop: "ch10_item" },
+    // 店主已迁入各自店内（门口 D 格朝门下钻）
     { id: "smith",  x: 12, y: 11, color: "#a87a4a", name: "铁匠", facility: "smith" },
     { id: "camp",   x: 16, y: 13, color: "#7a8a9a", name: "老兵", facility: "camp" },
     // 酒馆（樗蒲）：城东露天酒摊
@@ -67,6 +64,11 @@ MAPS["ch10_chengdu"] = {
     { x: 21, y: 9,  if: { flag: "q10", is: "chengdu" }, to: { map: "ch10_dingjun", x: 1, y: 8 } },
     { x: 10, y: 17, to: { map: "ch10_field", x: 22, y: 8 } },
     { x: 11, y: 17, to: { map: "ch10_field", x: 22, y: 8 } },
+    // 店铺室内下钻（朝门才进，路过不触发）
+    { x: 4,  y: 5,  face: [0, -1], to: { map: "ch10_inn_in", x: 4, y: 4 } },
+    { x: 12, y: 5,  face: [0, -1], to: { map: "ch10_weapon_in", x: 4, y: 4 } },
+    { x: 13, y: 5,  face: [0, -1], to: { map: "ch10_armor_in", x: 4, y: 4 } },
+    { x: 4,  y: 11, face: [0, -1], to: { map: "ch10_item_in", x: 4, y: 4 } },
   ],
 };
 

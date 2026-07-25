@@ -37,10 +37,7 @@ MAPS["ch05_luoyang"] = {
       lines: ["告示：西：旅店·杂货店　东：武器店·防具店",
               "东南：编成所（老兵）",
               "北门通向汜水关"] },
-    { id: "inn",    x: 4,  y: 5,  color: "#c98a4b", name: "旅店老板",   shop: "ch05_inn" },
-    { id: "weapon", x: 12, y: 5,  color: "#8a93a8", name: "武器店老板", shop: "ch05_weapon" },
-    { id: "armor",  x: 12, y: 11, color: "#b08a5a", name: "防具店老板", shop: "ch05_armor" },
-    { id: "item",   x: 4,  y: 11, color: "#7ee2a0", name: "杂货店老板", shop: "ch05_item" },
+    // 店主已迁入各自店内（门口 D 格朝门下钻）
     { id: "camp",   x: 16, y: 11, color: "#7a8a9a", name: "老兵", facility: "camp" },
     { id: "v1",     x: 7,  y: 7,  color: "#4f8cff", name: "市民",
       lines: ["洛阳刚遭过兵燹，好在店铺都重开了。", "关将军过五关的事，已经传开了。"] },
@@ -60,6 +57,11 @@ MAPS["ch05_luoyang"] = {
     { x: 11, y: 17, to: { map: "ch05_dongling", x: 16, y: 8 } },
     { x: 10, y: 0,  if: { flag: "q5", is: "hanfu" }, to: { map: "ch05_sishui", x: 1, y: 8 } },
     { x: 11, y: 0,  if: { flag: "q5", is: "hanfu" }, to: { map: "ch05_sishui", x: 1, y: 8 } },
+    // 店铺室内下钻（朝门才进，路过不触发）
+    { x: 4,  y: 5,  face: [0, -1], to: { map: "ch05_inn_in", x: 4, y: 4 } },
+    { x: 12, y: 5,  face: [0, -1], to: { map: "ch05_weapon_in", x: 4, y: 4 } },
+    { x: 12, y: 11, face: [0, -1], to: { map: "ch05_armor_in", x: 4, y: 4 } },
+    { x: 4,  y: 11, face: [0, -1], to: { map: "ch05_item_in", x: 4, y: 4 } },
   ],
 };
 

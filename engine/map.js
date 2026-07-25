@@ -83,6 +83,8 @@ function runActions(list, done, i) {
   else if (a.healAll) { S.party.forEach(h => { h.hp = h.maxHp; h.mp = h.maxMp; }); next(); }
   // 分线叙事：暂存当前队伍，换临时队伍（剧情结束用 partyRestore 还原）
   else if (a.partySwap) {
+    S.party.forEach(unequipHero);   // 暂存前卸装回仓库，换回不丢装备
+    S.bench.forEach(unequipHero);
     S.stash = { party: S.party, bench: S.bench, strategist: S.strategist };
     const lv = a.partySwap.lv || S.party.reduce((m, h) => Math.max(m, h.lv), 1);
     S.party = a.partySwap.members.map(k => newHero(k, lv));
@@ -91,12 +93,14 @@ function runActions(list, done, i) {
     next();
   }
   else if (a.partyRestore) {
+    S.party.forEach(unequipHero);   // 临时队伍的装备也回收进仓库
+    S.bench.forEach(unequipHero);
     if (S.stash) {
       S.party = S.stash.party;
       S.bench = S.stash.bench;
       S.strategist = S.stash.strategist;
       S.stash = null;
-      toast("队伍回归。");
+      toast("队伍回归。（装备已放回仓库，记得重新穿戴）");
     }
     next();
   }
@@ -135,7 +139,9 @@ function passable(x, y) {
   return TILE_META[tileAt(x, y)].pass && !npcAt(x, y) && !chestAt(x, y);
 }
 function transitionAt(x, y) {
-  return mapDef().transitions.find(t => t.x === x && t.y === y && evalCond(t.if));
+  // face: [dx,dy] 可选——要求玩家朝该方向移动才触发（进门需"朝门口多走一步"，路过不触发）
+  return mapDef().transitions.find(t => t.x === x && t.y === y && evalCond(t.if) &&
+    (!t.face || (S.dir.x === t.face[0] && S.dir.y === t.face[1])));
 }
 
 function warpTo(mapKey, x, y) {
@@ -173,7 +179,21 @@ function draw() {
       ctx.fillRect(tx * TILE, ty * TILE, TILE, TILE);
       // 简单纹理
       ctx.fillStyle = col[1];
-      if (ch === "T") { ctx.beginPath(); ctx.arc(tx*TILE+16, ty*TILE+14, 11, 0, Math.PI*2); ctx.fill(); }
+      if (ch === "T") {
+        // 树：草地底 + 树干 + 分层树冠（底层暗绿、中层主绿、顶部高光）
+        ctx.fillStyle = "#4f8a45";
+        ctx.fillRect(tx * TILE, ty * TILE, TILE, TILE);
+        ctx.fillStyle = "#467a3d";   // 草地点缀
+        ctx.fillRect(tx*TILE+6, ty*TILE+24, 2, 4); ctx.fillRect(tx*TILE+24, ty*TILE+26, 2, 4);
+        ctx.fillStyle = "#6a4a2a";   // 树干
+        ctx.fillRect(tx*TILE+13, ty*TILE+18, 6, 10);
+        ctx.fillStyle = "#2a5a2a";   // 树冠底层（暗）
+        ctx.beginPath(); ctx.arc(tx*TILE+16, ty*TILE+15, 11, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "#3d8a3d";   // 树冠中层（主绿）
+        ctx.beginPath(); ctx.arc(tx*TILE+15, ty*TILE+13, 9, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "#5aaa55";   // 树冠高光（左上）
+        ctx.beginPath(); ctx.arc(tx*TILE+12, ty*TILE+10, 4, 0, Math.PI*2); ctx.fill();
+      }
       else if (ch === "B") ctx.fillRect(tx * TILE, ty * TILE, TILE, 8);
       else if (ch === "P") { ctx.fillRect(tx*TILE, ty*TILE, TILE, 10); ctx.fillRect(tx*TILE+6, ty*TILE+18, 20, 4); }
       else if (ch === "R") { ctx.fillRect(tx*TILE+4, ty*TILE+6, 10, 8); ctx.fillRect(tx*TILE+18, ty*TILE+18, 9, 7); }
@@ -203,12 +223,27 @@ function draw() {
   for (const ch2 of (mapDef().chests || [])) {
     const opened = !!S.flags["chest_" + S.map + "_" + ch2.id];
     const bx = (ch2.x - c.x) * TILE, by = (ch2.y - c.y) * TILE;
-    ctx.fillStyle = opened ? "#5a4530" : "#8a5a2a";
-    ctx.beginPath();
-    ctx.roundRect(bx + 5, by + 10, 22, 16, 3);
-    ctx.fill();
-    ctx.fillStyle = opened ? "#7a6a50" : "#e8c84a";
-    ctx.fillRect(bx + 14, by + 10, 4, 16);
+    // 配色：闭合=棕箱金箍；开启=灰暗
+    const body = opened ? "#5a4530" : "#8a5a2a";
+    const lid = opened ? "#6a5240" : "#9a6a35";
+    const gold = opened ? "#7a6a50" : "#e8c84a";
+    const dark = opened ? "#3a2f24" : "#4a2f16";
+    // 箱体（下体）
+    ctx.fillStyle = body;
+    ctx.beginPath(); ctx.roundRect(bx + 4, by + 15, 24, 13, 3); ctx.fill();
+    // 箱盖（略亮色，圆顶）
+    ctx.fillStyle = lid;
+    ctx.beginPath(); ctx.roundRect(bx + 4, by + 6, 24, 11, 4); ctx.fill();
+    // 金箍横带（盖身接缝）
+    ctx.fillStyle = gold;
+    ctx.fillRect(bx + 4, by + 14, 24, 3);
+    // 两枚金扣（盖上，胶囊形）
+    ctx.beginPath(); ctx.roundRect(bx + 8, by + 8, 6, 5, 2); ctx.fill();
+    ctx.beginPath(); ctx.roundRect(bx + 18, by + 8, 6, 5, 2); ctx.fill();
+    // 外描边
+    ctx.strokeStyle = dark;
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.roundRect(bx + 4.5, by + 6.5, 23, 21, 4); ctx.stroke();
   }
   // NPC
   for (const n of mapDef().npcs) {

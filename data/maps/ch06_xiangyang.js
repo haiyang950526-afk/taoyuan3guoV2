@@ -31,7 +31,7 @@ MAPS["ch06_xiangyang"] = {
   ],
   npcs: [
     { id: "inn",  x: 4,  y: 5,  color: "#c98a4b", name: "旅店老板", shop: "ch06b_inn" },
-    { id: "book", x: 12, y: 5,  color: "#b8a05a", name: "文房铺老板", shop: "ch06_book" },
+    // 文房铺老板已迁入店内（门口 D 格朝门下钻）
     { id: "camp", x: 16, y: 11, color: "#7a8a9a", name: "老兵", facility: "camp" },
     { id: "v1",   x: 7,  y: 7,  color: "#4f8cff", name: "市民",
       lines: ["文房铺新到了计策书，读书人都去瞧瞧。", "蔡瑁将军设宴，城里最近热闹得很。"] },
@@ -51,6 +51,8 @@ MAPS["ch06_xiangyang"] = {
   transitions: [
     { x: 10, y: 17, to: { map: "ch06_field", x: 10, y: 1 } },
     { x: 11, y: 17, to: { map: "ch06_field", x: 10, y: 1 } },
+    // 文房铺室内下钻（朝门才进，路过不触发）
+    { x: 12, y: 5,  face: [0, -1], to: { map: "ch06_book_in", x: 4, y: 4 } },
   ],
 };
 

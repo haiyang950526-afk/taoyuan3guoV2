@@ -197,8 +197,15 @@ function showEquip() {
     }
     body.appendChild(line("—— 装备仓库 ——"));
     const spare = S.equips.filter(e => !e.on);
-    body.appendChild(line(spare.length ?
-      spare.map(e => e.id + (e.plus ? "+" + e.plus : "")).join("、") : "（空）"));
+    // 同类合并显示：铁剑+2×3
+    const cnt = {};
+    spare.forEach(e => {
+      const k = e.id + (e.plus ? "+" + e.plus : "");
+      cnt[k] = (cnt[k] || 0) + 1;
+    });
+    const keys = Object.keys(cnt);
+    body.appendChild(line(keys.length ?
+      keys.map(k => k + (cnt[k] > 1 ? "×" + cnt[k] : "")).join("、") : "（空）"));
     body.appendChild(btn("返回", openMenu, "ghost"));
   });
 }
@@ -229,10 +236,18 @@ function showEquipSlot(h, slot) {
       (slot !== "weapon" || canWield(h.key, e.id)));
     if (!spare.length) body.appendChild(line("仓库里没有可装备的" + SLOT_LABEL[slot] +
       (slot === "weapon" ? "（注意武器系别限定）" : "")));
-    for (const inst of spare) {
+    // 同类（id+强化）合并为一行，数量标 ×N；点击装备该组第一个
+    const groups = {};
+    spare.forEach(e => {
+      const k = e.id + "|" + (e.plus || 0);
+      (groups[k] = groups[k] || []).push(e);
+    });
+    for (const k in groups) {
+      const insts = groups[k];
+      const inst = insts[0];
       const it = ITEMS[inst.id];
       body.appendChild(btn(inst.id + (inst.plus ? "+" + inst.plus : "") +
-        "（" + it.desc + "）", () => {
+        "（" + it.desc + "）" + (insts.length > 1 ? " ×" + insts.length : ""), () => {
         if (cur) cur.on = null;               // 换下的旧件回仓库
         inst.on = h.key;
         h.equips[slot] = inst.uid;
@@ -554,10 +569,10 @@ function showStatus() {
   openPanel("状态", body => {
     for (const h of S.party) {
       const next = expToNext(h.lv);
-      body.appendChild(line(h.key + "　Lv " + h.lv + (h.auto ? "（自动）" : "") +
-        "　EXP " + (next === Infinity ? "MAX" :
+      body.appendChild(line(h.key + "　等级 " + h.lv + (h.auto ? "（自动）" : "") +
+        "　经验 " + (next === Infinity ? "MAX" :
           (h.exp - expForLevel(h.lv)) + "/" + next)));
-      body.appendChild(line("　HP " + h.hp + "/" + h.maxHp + "　MP " + h.mp + "/" + h.maxMp));
+      body.appendChild(line("　兵 " + h.hp + "/" + h.maxHp + "　谋 " + h.mp + "/" + h.maxMp));
       body.appendChild(line("　攻" + atkTotal(h) + "　防" + defTotal(h) + "　智" + intTotal(h) +
         "　速" + spdTotal(h) + "　运" + luckTotal(h)));
       body.appendChild(line("　装备：" +
