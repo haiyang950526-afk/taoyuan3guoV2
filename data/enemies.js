@@ -16,17 +16,17 @@
 
 const ENEMIES = {
   // —— 序章 · 黄巾（lv1-3） ——
-  "黄巾贼":   { lv: 1, hp: 30,  atk: 8,  int: 3,  def: 4,  spd: 5,  luck: 4, gold: [25, 50],   color: "#d8b93a", ai: "brute",
+  "黄巾贼":   { lv: 1, hp: 30,  atk: 12,  int: 3,  def: 4,  spd: 5,  luck: 4, gold: [25, 50],   color: "#d8b93a", ai: "brute",
                 drops: [{ item: "草药", rate: 0.15 }, { item: "铜剑", rate: 0.03 }, { item: "皮帽", rate: 0.03 }] },
-  "黄巾弓手": { lv: 2, hp: 24,  atk: 11, int: 3,  def: 3,  spd: 8,  luck: 6, gold: [31, 56],   color: "#d88a3a", ai: "archer",
+  "黄巾弓手": { lv: 2, hp: 24,  atk: 14, int: 3,  def: 3,  spd: 8,  luck: 6, gold: [31, 56],   color: "#d88a3a", ai: "archer",
                 drops: [{ item: "草药", rate: 0.15 }, { item: "布衣", rate: 0.03 }, { item: "布护腿", rate: 0.03 }] },
   "黄巾头目": { lv: 3, hp: 130, atk: 14, int: 4,  def: 6,  spd: 7,  luck: 6, gold: [375, 375], color: "#c0392b", ai: "brute", boss: true,
                 drops: [{ item: "皮甲", rate: 1 }] },
 
   // —— 第一章 · 曹军（lv4-9） ——
-  "曹兵":     { lv: 4, hp: 60,  atk: 14, int: 4,  def: 8,  spd: 6,  luck: 5, gold: [62, 100],   color: "#8a93a8", ai: "brute",
+  "曹兵":     { lv: 4, hp: 60,  atk: 17, int: 4,  def: 8,  spd: 6,  luck: 5, gold: [62, 100],   color: "#8a93a8", ai: "brute",
                 drops: [{ item: "草药", rate: 0.15 }, { item: "金疮药", rate: 0.08 }, { item: "皮甲", rate: 0.03 }, { item: "铁盔", rate: 0.03 }] },
-  "曹军弓手": { lv: 5, hp: 50,  atk: 18, int: 5,  def: 6,  spd: 10, luck: 8, gold: [75, 112],   color: "#6a8ab8", ai: "archer",
+  "曹军弓手": { lv: 5, hp: 50,  atk: 21, int: 5,  def: 6,  spd: 10, luck: 8, gold: [75, 112],   color: "#6a8ab8", ai: "archer",
                 drops: [{ item: "草药", rate: 0.15 }, { item: "金疮药", rate: 0.08 }, { item: "皮盾", rate: 0.03 }, { item: "皮护腿", rate: 0.03 }] },
   "曹军什长": { lv: 7, hp: 110, atk: 20, int: 6,  def: 12, spd: 8,  luck: 6, gold: [112, 162],  color: "#5a6a88", ai: "brute", elite: true,
                 drops: [{ item: "金疮药", rate: 0.20 }, { item: "铁甲", rate: 0.05 }] },
@@ -34,7 +34,7 @@ const ENEMIES = {
                 drops: [{ item: "铁甲", rate: 1 }] },
 
   // —— 第二章 · 袁术军 / 吕布军（lv8-13） ——
-  "袁术兵":   { lv: 8,  hp: 90,  atk: 22, int: 5,  def: 12, spd: 8,  luck: 5, gold: [88, 138],  color: "#b08a3a", ai: "brute",
+  "袁术兵":   { lv: 8,  hp: 90,  atk: 25, int: 5,  def: 12, spd: 8,  luck: 5, gold: [88, 138],  color: "#b08a3a", ai: "brute",
                 drops: [{ item: "草药", rate: 0.15 }, { item: "金疮药", rate: 0.08 }, { item: "钢剑", rate: 0.03 }, { item: "钢盔", rate: 0.03 }] },
   "袁术弓手": { lv: 9,  hp: 80,  atk: 26, int: 6,  def: 10, spd: 12, luck: 8, gold: [106, 162],  color: "#c09a4a", ai: "archer",
                 drops: [{ item: "草药", rate: 0.15 }, { item: "金疮药", rate: 0.08 }, { item: "钢甲", rate: 0.03 }, { item: "铁护腿", rate: 0.03 }] },
@@ -161,9 +161,9 @@ const ENEMIES = {
                 drops: [{ item: "龙泉剑", rate: 1 }] },
   "马超(敌)": { lv: 46, hp: 7500, atk: 112, int: 12, def: 52, spd: 23, luck: 10, gold: [10000, 10000], color: "#d8d8e8", ai: "heavy", boss: true,
                 drops: [{ item: "龙鳞铠", rate: 1 }] },
-  "夏侯渊":   { lv: 47, hp: 8000, atk: 116, int: 14, def: 56, spd: 22, luck: 11, gold: [11250, 11250], color: "#4a3a2a", ai: "heavy", boss: true,
+  "夏侯渊":   { lv: 47, hp: 6500, atk: 116, int: 14, def: 56, spd: 22, luck: 11, gold: [11250, 11250], color: "#4a3a2a", ai: "heavy", boss: true,
                 drops: [{ item: "龙泉剑", rate: 1 }] },
-  "张郃":     { lv: 47, hp: 8200, atk: 112, int: 16, def: 58, spd: 23, luck: 11, gold: [11250, 11250], color: "#3a4a3a", ai: "strategist", boss: true, skill: "zhengshu",
+  "张郃":     { lv: 47, hp: 6800, atk: 112, int: 16, def: 58, spd: 23, luck: 11, gold: [11250, 11250], color: "#3a4a3a", ai: "strategist", boss: true, skill: "zhengshu",
                 drops: [{ item: "龙鳞铠", rate: 1 }] },
 
   // —— 第十一章 · 北伐（lv47-55） ——
@@ -186,7 +186,7 @@ const ENEMIES = {
   "司马懿亲军": { lv: 53, hp: 1100, atk: 124, int: 16, def: 60, spd: 22, luck: 10, gold: [1438, 1812], color: "#2a3a5a", ai: "brute", elite: true,
                 drops: [{ item: "还魂丹", rate: 0.20 }, { item: "龙泉剑", rate: 0.05 }] },
   // 最终 Boss：司马懿（三形态：坚守→反击→天命全屏计策）
-  "司马懿":   { lv: 55, hp: 12000, atk: 120, int: 40, def: 70, spd: 24, luck: 12, gold: [25000, 25000], color: "#2a2a4a", ai: "caster", boss: true,
+  "司马懿":   { lv: 55, hp: 9000, atk: 120, int: 40, def: 70, spd: 24, luck: 12, gold: [25000, 25000], color: "#2a2a4a", ai: "caster", boss: true,
                 drops: [{ item: "七星剑", rate: 1 }],
                 phases: [
                   { hpBelow: 0.7, say: ["司马懿：蜀军久战必疲——全军，转守为攻！"],

@@ -13,7 +13,8 @@ const ITEMS = {
   "铁剑":   { type: "weapon", atk: 6,  price: 900,  desc: "精铁打造，攻击+6" },
   "钢剑":   { type: "weapon", atk: 10, price: 2000, desc: "百炼钢刃，攻击+10" },
   "精钢剑": { type: "weapon", atk: 20, price: 4500, desc: "精钢百炼，攻击+20" },
-  "白银剑": { type: "weapon", atk: 32, price: 10000, desc: "白银流光，攻击+32" },
+  "玄铁剑": { type: "weapon", atk: 26, price: 6800, desc: "玄铁沉锋，攻击+26" },
+  "白银剑": { type: "weapon", atk: 32, price: 13000, desc: "白银流光，攻击+32" },
   "龙泉剑": { type: "weapon", atk: 48, price: 22000, desc: "龙泉秋水，攻击+48" },
   "铁刀":   { type: "weapon", arm: "blade", atk: 22, price: 4800, desc: "镔铁长刀，攻击+22（刀系）" },
   "铁矛":   { type: "weapon", arm: "spear", atk: 22, price: 4800, desc: "精铁蛇矛，攻击+22（矛系）" },
@@ -28,8 +29,9 @@ const ITEMS = {
   "落日弓":     { type: "weapon", arm: "bow",   atk: 58, price: 60000, nosell: true, desc: "名品：落日九射，攻击+58（弓系）" },
   "七星杖":     { type: "weapon", arm: "fan",   atk: 20, int: 50, price: 60000, nosell: true, desc: "名品：七星续命，攻+20 智+50（扇系）" },
   "七星剑":     { type: "weapon", atk: 55, price: 50000, nosell: true, desc: "名品彩蛋：七星宝剑，攻击+55" },
-  // 成长性武器（樗蒲首次全黑奖励）：攻击 = 4 + 1.5×持有者等级（formulas.js equipBonus 的 grow 判定）
-  "时运":   { type: "weapon", atk: 4, grow: 1.5, price: 0, nosell: true, desc: "樗蒲首奖：攻+4 且随等级成长（每级+1.5），攻击时偶发眩晕/起火/追加/回血" },
+  // 成长性武器（樗蒲首次全黑奖励）：攻击 = 6 + 0.8×持有者等级（formulas.js equipBonus 的 grow 判定）
+  // 强度定位：Lv55≈50，介于龙泉(48)与名品(62+)之间——情怀毕业装，不碾压商店与名品
+  "时运":   { type: "weapon", atk: 6, grow: 0.8, price: 0, nosell: true, desc: "樗蒲首奖：攻+6 且随等级成长（每级+0.8），攻击时偶发眩晕/起火/追加/回血" },
   // 防具（def）
   "布衣":   { type: "armor", def: 2,  price: 150,  desc: "粗布衣裳，防御+2" },
   "皮甲":   { type: "armor", def: 4,  price: 500,  desc: "鞣制皮甲，防御+4" },
@@ -37,7 +39,7 @@ const ITEMS = {
   "铁甲":   { type: "armor", def: 7,  price: 1200, desc: "铁叶札甲，防御+7" },
   "钢甲":   { type: "armor", def: 11, price: 2400, desc: "钢锻重铠，防御+11" },
   "玄铁甲": { type: "armor", def: 18, price: 5200, desc: "玄铁细铠，防御+18" },
-  "白银铠": { type: "armor", def: 30, price: 12000, desc: "白银重铠，防御+30" },
+  "白银铠": { type: "armor", def: 30, price: 15000, desc: "白银重铠，防御+30" },
   "龙鳞铠": { type: "armor", def: 45, price: 26000, desc: "龙鳞宝铠，防御+45" },
   // 饰品（特殊效果）
   "护心镜": { type: "acc", def: 3, price: 1500, desc: "护住心口的铜镜，防御+3" },
@@ -107,21 +109,21 @@ const SHOPS = {
   ch03_item:   { type: "item", stock: ["草药", "金疮药", "清泉", "火药弹"], text: "清泉润喉，火药防身，都是时新货。" },
   // 第五章 · 洛阳（精钢/玄铁 + 上一代钢；还魂丹上线）
   ch05_inn:    { type: "inn", cost: 150, text: "洛阳古都，150金一晚，马虎不得。" },
-  ch05_weapon: { type: "equip", title: "武器店", filter: ["weapon"], stock: ["精钢剑", "钢剑"], text: "精钢好刃，关内难寻。" },
+  ch05_weapon: { type: "equip", title: "武器店", filter: ["weapon"], stock: ["玄铁剑", "精钢剑", "钢剑"], text: "玄铁精钢，关内难寻。" },
   ch05_armor:  { type: "equip", title: "防具店", filter: ["armor", "helmet", "legs", "acc"], stock: ["玄铁甲", "玄铁盔", "钢护腿", "玉佩", "钢甲", "钢盔", "铁护腿"], text: "玄铁细铠，洛阳名品。" },
   ch05_item:   { type: "item", stock: ["金疮药", "还魂丹", "清泉"], text: "还魂丹千金难求，客官要不要备一颗？" },
   // 第五章 · 古城（小旅店）
   ch05g_inn:   { type: "inn", cost: 100, text: "古城虽小，100金一晚，被褥干净。" },
   // 第六章 · 新野 / 襄阳（文房铺卖计策书）
   ch06_inn:    { type: "inn", cost: 150, text: "新野小城，150金一晚，客官歇息。" },
-  ch06_weapon: { type: "equip", title: "武器店", filter: ["weapon"], stock: ["精钢剑", "钢剑"], text: "新野地僻，这些是压箱底的好货。" },
+  ch06_weapon: { type: "equip", title: "武器店", filter: ["weapon"], stock: ["玄铁剑", "精钢剑", "钢剑"], text: "新野地僻，这些是压箱底的好货。" },
   ch06_armor:  { type: "equip", title: "防具店", filter: ["armor", "helmet", "legs", "acc"], stock: ["玄铁甲", "玄铁盔", "钢护腿", "玉佩", "钢甲", "钢盔", "铁护腿"], text: "衣甲齐全，客官请便。" },
   ch06_item:   { type: "item", stock: ["金疮药", "还魂丹", "清泉"], text: "药材齐备，客官请便。" },
   ch06_book:   { type: "item", stock: ["火计书", "水计书", "落石书", "风计书", "雷计书", "石阵书"], text: "文房铺中，计策书六卷，识货的自来。" },
   ch06b_inn:   { type: "inn", cost: 180, text: "襄阳大城，180金一晚。" },
   // 第七章 · 新野战时商店（兵荒马乱，全线 +20%）
   ch07_inn:    { type: "inn", cost: 180, text: "兵荒马乱的，180金一晚，热水照供。" },
-  ch07_weapon: { type: "equip", title: "武器店", filter: ["weapon"], priceMult: 1.2, stock: ["精钢剑", "钢剑"], text: "战事吃紧，价钱涨了两成，客官莫怪。" },
+  ch07_weapon: { type: "equip", title: "武器店", filter: ["weapon"], priceMult: 1.2, stock: ["玄铁剑", "精钢剑", "钢剑"], text: "战事吃紧，价钱涨了两成，客官莫怪。" },
   ch07_armor:  { type: "equip", title: "防具店", filter: ["armor", "helmet", "legs", "acc"], priceMult: 1.2, stock: ["玄铁甲", "玄铁盔", "钢护腿", "玉佩", "钢甲", "钢盔", "铁护腿"], text: "物资紧张，涨了两成，仍是保命要紧。" },
   ch07_item:   { type: "item", priceMult: 1.2, stock: ["金疮药", "还魂丹", "清泉", "火药弹"], text: "物资紧张，涨了两成，仍是保命要紧。" },
   // 第八章 · 柴桑（白银代际 + 上一代玄铁）

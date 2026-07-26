@@ -444,7 +444,8 @@ function rollChupu(bet) {
 function dojoOffer() {
   const avgLv = Math.max(1, Math.round(S.party.reduce((s, h) => s + h.lv, 0) / S.party.length));
   const exp = Math.round(expToNext(avgLv) * 0.25);
-  return { exp: exp, fee: exp * 6 };
+  // 单价随等级上浮（约 6→9 金/经验），保住后期刷怪价值
+  return { exp: exp, fee: Math.round(exp * (6 + avgLv * 0.06)) };
 }
 function openDojo() {
   S.mode = "menu";

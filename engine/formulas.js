@@ -117,9 +117,9 @@ function healAmount(intv, coef, rand) {
   return Math.max(1, Math.round(intv * coef * (0.95 + rand() * 0.1)));
 }
 
-// 单敌经验：小怪 lv×8，精英 ×1.5，Boss lv×20
+// 单敌经验：小怪 lv×10，精英 ×1.5，Boss lv×20
 function enemyExp(e) {
-  return Math.round(e.lv * (e.boss ? 20 : 8) * (e.elite ? 1.5 : 1));
+  return Math.round(e.lv * (e.boss ? 20 : 10) * (e.elite ? 1.5 : 1));
 }
 
 // 逃跑率（03 文档）：50% + (我方均速 - 敌方均速)×1%，夹在 5%~95%
@@ -171,7 +171,7 @@ function pickWeightedIndex(weights, rand) {
 // ---------------- 武器强化（第十章铁匠铺） ----------------
 // 100% 成功、失败不掉级（简化玩家友好）、上限 +5、每级基础值 +5%、费用递增
 var ENHANCE_MAX = 5;
-function enhanceFee(price, plus) { return Math.floor(price * 0.3 * (plus + 1)); }
+function enhanceFee(price, plus) { return Math.floor((price || 20000) * 0.3 * (plus + 1)); }
 function enhancedAtk(baseAtk, plus) { return Math.round(baseAtk * (1 + 0.05 * (plus || 0))); }
 
 // ---------------- 收服战 / 多形态 Boss ----------------
