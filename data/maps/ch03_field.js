@@ -18,9 +18,9 @@ MAPS["ch03_field"] = {
     "R.............,,.......R",
     "R......T......,,.......R",
     "R..T........,,....T....R",
-    "R.....BB.BB.BB,,.......R",
-    "R....TBD.DB.BD,,,......R",
-    "R........,.....,,,.....R",
+    "R.............,,.......R",
+    "R....T........,,,......R",
+    "R........h.....,,,.....R",
     "RRRRRRRRRRRRRRRRRRRRRRRR",
   ],
   encounterTiles: ["."],
@@ -45,8 +45,8 @@ MAPS["ch03_field"] = {
     // 东门：围猎期间开放
     { x: 23, y: 8,  if: { flag: "q3", is: "audience" }, to: { map: "ch03_hunt", x: 1, y: 6 } },
     { x: 23, y: 9,  if: { flag: "q3", is: "audience" }, to: { map: "ch03_hunt", x: 1, y: 6 } },
-    // 许南村村口（南部）：朝北走进门触发
-    { x: 9, y: 16, face: [0, -1], to: { map: "ch03_village", x: 5, y: 7 } },
+    // 许南村村口（南部）：走上小屋图标即进村
+    { x: 9, y: 16, to: { map: "ch03_village", x: 9, y: 12 } },
   ],
 };
 

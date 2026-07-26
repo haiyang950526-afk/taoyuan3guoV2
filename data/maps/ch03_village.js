@@ -1,40 +1,46 @@
-// 地图 · ch03_village 许南村（ch03_field 许都野外的村庄；第三章）
+// 地图 · ch03_village 许南村（ch03_field 许都野外的村庄；第三章；迷你城镇布局 20×14）
 var MAPS = typeof MAPS !== "undefined" ? MAPS : {};
 
 MAPS["ch03_village"] = {
   name: "许南村",
   grid: [
-    "RRRRRRRRRRRRR",
-    "R.BB.BB.BB..R",
-    "R.BD.BD.BD..R",
-    "R...........R",
-    "R..BBBB.....R",
-    "R..BBBB.....R",
-    "R...........R",
-    "R....,,.....R",
-    "RRRRR,,RRRRRR",
+    "RRRRRRRRRRRRRRRRRRRR",
+    "R..T...........T...R",
+    "R.BBBB.....BBBB....R",
+    "R.BBBB.....BBBB....R",
+    "R.BDBB.....BDBB....R",
+    "R..,........,......R",
+    "R..,........,...T..R",
+    "R..,,,,,,,,,,......R",
+    "R.BBBB...,,........R",
+    "R.BBBB...,,....v...R",
+    "R.BDBB...,,....T...R",
+    "R..,,,,,,,.........R",
+    "R........,,.....T..R",
+    "RRRRRRRRRGGRRRRRRRRR",
   ],
   encounterTiles: [],
-  // 建筑招牌（画在顶部居中的 B 格上）
+  // 建筑招牌（画在建筑顶格）
   signs: [
-    { x: 4, y: 4, text: "客", color: "#ffd166" },
+    { x: 3, y: 2, text: "客", color: "#ffd166" },
+    { x: 12, y: 2, text: "药", color: "#ffd166" },
   ],
-  // 上方三栋空房为预留宝箱房：只放建筑，门口不放 transition（未来放宝箱用）
+  // 左下民房为预留宝箱房：只放建筑，门口不放 transition（未来放宝箱用）
   npcs: [
-    { id: "inn", x: 4, y: 6, color: "#c98a4b", name: "旅店老板", shop: "vil_inn" },
-    { id: "herb", x: 8, y: 5, color: "#6a9a5a", name: "药铺掌柜", shop: "vil_item" },
-    { id: "vil1", x: 2, y: 3, color: "#9a8a6a", name: "村民",
+    { id: "inn", x: 4, y: 5, color: "#c98a4b", name: "旅店老板", shop: "vil_inn" },
+    { id: "herb", x: 13, y: 5, color: "#6a9a5a", name: "药铺掌柜", shop: "vil_item" },
+    { id: "vil1", x: 14, y: 9, color: "#9a8a6a", name: "村民",
       lines: ["许都是天子脚下，可苛捐杂税一样不少，都进了相府。"] },
-    { id: "vil2", x: 9, y: 6, color: "#8a7a9a", name: "村妇",
+    { id: "vil2", x: 6, y: 7, color: "#8a7a9a", name: "村妇",
       lines: ["前儿个皇上在许田围猎，曹丞相竟用天子的宝雕弓，僭越得很。"] },
-    { id: "vil3", x: 2, y: 6, color: "#7a8a9a", name: "老汉",
+    { id: "vil3", x: 11, y: 12, color: "#7a8a9a", name: "老汉",
       lines: ["村里读书人嘀咕什么“衣带诏”，那可是掉脑袋的事，莫谈莫谈。"] },
   ],
   chests: [],
   transitions: [
-    // 村口：回许都野外
-    { x: 5, y: 8, to: { map: "ch03_field", x: 10, y: 16 } },
-    { x: 6, y: 8, to: { map: "ch03_field", x: 10, y: 16 } },
+    // 村口：回许都野外（落在村图标旁的草地）
+    { x: 9, y: 13, to: { map: "ch03_field", x: 10, y: 16 } },
+    { x: 10, y: 13, to: { map: "ch03_field", x: 10, y: 16 } },
   ],
 };
 
