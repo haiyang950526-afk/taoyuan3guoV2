@@ -229,64 +229,41 @@ function draw() {
         else { ctx.fillStyle = "#8a8a96"; ctx.fillRect(tx*TILE+8, ty*TILE+12, 16, 14); }
       }
       else if (ch === "h") {
-        // 村庄入口小图标：草地底 + 迷你小屋（墙身/屋顶/门/窗）
+        // 村庄入口图标：草地底 + 精绘小屋（大檐棕瓦屋顶 + 米色墙身 + 门窗）
         ctx.fillStyle = "#4f8a45";
         ctx.fillRect(tx * TILE, ty * TILE, TILE, TILE);
         ctx.fillStyle = "#467a3d";
-        ctx.fillRect(tx*TILE+5, ty*TILE+26, 2, 4); ctx.fillRect(tx*TILE+25, ty*TILE+24, 2, 4);
-        // 墙身
-        ctx.fillStyle = "#c9a876";
-        ctx.fillRect(tx*TILE+8, ty*TILE+15, 16, 11);
-        // 屋顶（梯形大帽檐）
+        ctx.fillRect(tx*TILE+4, ty*TILE+26, 2, 4); ctx.fillRect(tx*TILE+26, ty*TILE+25, 2, 4);
+        // 大檐屋顶（梯形压檐 + 檐口深线 + 瓦楞）
         ctx.fillStyle = "#8a4a2a";
         ctx.beginPath();
-        ctx.moveTo(tx*TILE+5, ty*TILE+15); ctx.lineTo(tx*TILE+16, ty*TILE+5);
-        ctx.lineTo(tx*TILE+27, ty*TILE+15); ctx.closePath(); ctx.fill();
+        ctx.moveTo(tx*TILE+2, ty*TILE+14); ctx.lineTo(tx*TILE+16, ty*TILE+3);
+        ctx.lineTo(tx*TILE+30, ty*TILE+14); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = "#a85a32";
+        ctx.fillRect(tx*TILE+9, ty*TILE+8, 2, 6); ctx.fillRect(tx*TILE+15, ty*TILE+5, 2, 9);
+        ctx.fillRect(tx*TILE+21, ty*TILE+8, 2, 6);
         ctx.fillStyle = "#6a3420";
-        ctx.fillRect(tx*TILE+5, ty*TILE+14, 22, 2);
+        ctx.fillRect(tx*TILE+2, ty*TILE+13, 28, 3);
+        // 米色墙身 + 墙裙
+        ctx.fillStyle = "#c9a876";
+        ctx.fillRect(tx*TILE+6, ty*TILE+16, 20, 12);
+        ctx.fillStyle = "#b08a5a";
+        ctx.fillRect(tx*TILE+6, ty*TILE+25, 20, 3);
         // 门 + 窗
         ctx.fillStyle = "#3a2a1a";
-        ctx.fillRect(tx*TILE+14, ty*TILE+19, 5, 7);
+        ctx.fillRect(tx*TILE+13, ty*TILE+19, 6, 9);
         ctx.fillStyle = "#5a8ac0";
-        ctx.fillRect(tx*TILE+10, ty*TILE+17, 3, 3);
+        ctx.fillRect(tx*TILE+8, ty*TILE+18, 4, 4);
+        ctx.fillRect(tx*TILE+21, ty*TILE+18, 4, 4);
       }
-      else if (ch === "B") {
-        // 房屋：顶部格画棕瓦屋顶（带檐口和瓦楞），其余格画米色墙身（带墙裙、间或窗户）
-        ctx.fillStyle = "#c9a876";
-        ctx.fillRect(tx * TILE, ty * TILE, TILE, TILE);
-        if (tileAt(c.x + tx, c.y + ty - 1) !== "B") {
-          ctx.fillStyle = "#8a4a2a";                       // 屋顶棕瓦
-          ctx.fillRect(tx * TILE, ty * TILE, TILE, 14);
-          ctx.fillStyle = "#a85a32";                       // 瓦楞
-          for (let wi = 0; wi < 4; wi++) ctx.fillRect(tx*TILE+3+wi*8, ty*TILE+2, 2, 11);
-          ctx.fillStyle = "#6a3420";                       // 檐口线
-          ctx.fillRect(tx * TILE, ty * TILE + 13, TILE, 3);
-        } else {
-          ctx.fillStyle = "#b08a5a";                       // 墙裙
-          ctx.fillRect(tx * TILE, ty * TILE + 28, TILE, 4);
-          if ((c.x + tx) % 3 === 1) {                      // 间或一扇窗
-            ctx.fillStyle = "#5a8ac0";
-            ctx.fillRect(tx*TILE+13, ty*TILE+11, 6, 6);
-          }
-        }
-      }
+      else if (ch === "B") ctx.fillRect(tx * TILE, ty * TILE, TILE, 8);
       else if (ch === "P") { ctx.fillRect(tx*TILE, ty*TILE, TILE, 10); ctx.fillRect(tx*TILE+6, ty*TILE+18, 20, 4); }
       else if (ch === "R") { ctx.fillRect(tx*TILE+4, ty*TILE+6, 10, 8); ctx.fillRect(tx*TILE+18, ty*TILE+18, 9, 7); }
       else if (ch === "W" && (tx + ty) % 2 === 0) ctx.fillRect(tx*TILE+6, ty*TILE+14, 20, 2);
       else if (ch === "M") ctx.fillRect(tx*TILE+2, ty*TILE+8, 28, 3);
       else if (ch === ".") { ctx.fillRect(tx*TILE+8, ty*TILE+9, 2, 4); ctx.fillRect(tx*TILE+22, ty*TILE+20, 2, 4); }
       else if (ch === "C") { ctx.beginPath(); ctx.arc(tx*TILE+16, ty*TILE+18, 10, Math.PI, 0); ctx.fill(); }
-      else if (ch === "D") {
-        // 店门：米色墙 + 深色门洞 + 门楣
-        ctx.fillStyle = "#c9a876";
-        ctx.fillRect(tx * TILE, ty * TILE, TILE, TILE);
-        ctx.fillStyle = "#b08a5a";
-        ctx.fillRect(tx * TILE, ty * TILE + 28, TILE, 4);
-        ctx.fillStyle = "#6a4a2a";
-        ctx.fillRect(tx*TILE+8, ty*TILE+5, 16, 4);
-        ctx.fillStyle = "#3a2a1a";
-        ctx.fillRect(tx*TILE+10, ty*TILE+8, 12, 24);
-      }
+      else if (ch === "D") ctx.fillRect(tx*TILE+10, ty*TILE+4, 12, 26);
       else if (ch === "G") { ctx.fillRect(tx*TILE+4, ty*TILE+2, 24, 6); }
       else if (ch === "E") { ctx.fillRect(tx*TILE+8, ty*TILE+8, 16, 4); ctx.fillRect(tx*TILE+8, ty*TILE+16, 16, 4); }
       else if (ch === ",") { ctx.fillRect(tx*TILE+2, ty*TILE+6, 12, 9); ctx.fillRect(tx*TILE+18, ty*TILE+17, 12, 9); }
@@ -363,7 +340,12 @@ function stepLogic() {
   S.lastStep = performance.now();
   S.dir = { x: S.held.x, y: S.held.y };
   const nx = S.px + S.dir.x, ny = S.py + S.dir.y;
-  if (!passable(nx, ny)) return;
+  if (!passable(nx, ny)) {
+    // 已站在入口格上、朝门被挡（D 不可踩）也触发传送——不用先退一格
+    const tr = transitionAt(S.px, S.py);
+    if (tr && tr.face) warpTo(tr.to.map, tr.to.x, tr.to.y);
+    return;
+  }
   S.moving = { fx: S.px, fy: S.py, tx: nx, ty: ny, t0: performance.now() };
 }
 
