@@ -27,8 +27,6 @@ MAPS["ch03_village"] = {
   ],
   // 左下民房为预留宝箱房：只放建筑，门口不放 transition（未来放宝箱用）
   npcs: [
-    { id: "inn", x: 4, y: 5, color: "#c98a4b", name: "旅店老板", shop: "vil_inn" },
-    { id: "herb", x: 13, y: 5, color: "#6a9a5a", name: "药铺掌柜", shop: "vil_item" },
     { id: "vil1", x: 14, y: 9, color: "#9a8a6a", name: "村民",
       lines: ["许都是天子脚下，可苛捐杂税一样不少，都进了相府。"] },
     { id: "vil2", x: 6, y: 7, color: "#8a7a9a", name: "村妇",
@@ -41,6 +39,9 @@ MAPS["ch03_village"] = {
     // 村口：回许都野外（落在村图标旁的草地）
     { x: 9, y: 13, to: { map: "ch03_field", x: 10, y: 16 } },
     { x: 10, y: 13, to: { map: "ch03_field", x: 10, y: 16 } },
+    // 客栈/药铺室内下钻（朝门才进，路过不触发）
+    { x: 3, y: 5, face: [0, -1], to: { map: "ch03_village_inn_in", x: 4, y: 4 } },
+    { x: 12, y: 5, face: [0, -1], to: { map: "ch03_village_item_in", x: 4, y: 4 } },
   ],
 };
 

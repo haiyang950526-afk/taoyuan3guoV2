@@ -167,7 +167,7 @@ const TILE_COLORS = {
   "L": ["#9a7a52", "#8a6a45"], "X": ["#7a4a3a", "#5a3428"],
 };
 
-// ---------------- 图像 tile（树木多变体/装饰物，assets/gfx/；未加载完回退程序绘制） ----------------
+// ---------------- 图像 tile（装饰物，assets/gfx/；未加载完回退程序绘制） ----------------
 const TILE_IMGS = {};
 function tileImg(name) {
   let rec = TILE_IMGS[name];
@@ -180,8 +180,6 @@ function tileImg(name) {
   }
   return rec.ok ? rec.img : null;
 }
-// 树的 5 个变体：梭子单树/双树/三树簇/圆叶树/密林，按坐标伪随机混排
-const TREE_VARIANTS = ["tree_1", "tree_2", "tree_3", "tree_4", "tree_5"];
 
 function draw() {
   if (S.mode === "title") return;
@@ -198,23 +196,31 @@ function draw() {
       // 简单纹理
       ctx.fillStyle = col[1];
       if (ch === "T") {
-        // 树：图像变体按坐标混排（assets/gfx/tree_1~5.png）；未加载完用程序绘制兜底
-        const tv = tileImg(TREE_VARIANTS[((c.x + tx) * 7 + (c.y + ty) * 13) % TREE_VARIANTS.length]);
-        if (tv) {
-          ctx.drawImage(tv, tx * TILE, ty * TILE, TILE, TILE);
-        } else {
-          ctx.fillStyle = "#4f8a45";
-          ctx.fillRect(tx * TILE, ty * TILE, TILE, TILE);
-          ctx.fillStyle = "#467a3d";
-          ctx.fillRect(tx*TILE+6, ty*TILE+24, 2, 4); ctx.fillRect(tx*TILE+24, ty*TILE+26, 2, 4);
+        // 树：程序绘制，3 种构图按坐标混排（同一造型：单棵/双棵堆叠/三棵成簇）
+        const variant = ((c.x + tx) * 7 + (c.y + ty) * 13) % 3;
+        ctx.fillStyle = "#4f8a45";
+        ctx.fillRect(tx * TILE, ty * TILE, TILE, TILE);
+        ctx.fillStyle = "#467a3d";
+        ctx.fillRect(tx*TILE+5, ty*TILE+26, 2, 4); ctx.fillRect(tx*TILE+25, ty*TILE+24, 2, 4);
+        const tree = (cx, cy, r) => {
           ctx.fillStyle = "#6a4a2a";
-          ctx.fillRect(tx*TILE+13, ty*TILE+18, 6, 10);
+          ctx.fillRect(cx - 3, cy + r - 4, 6, 10);
           ctx.fillStyle = "#2a5a2a";
-          ctx.beginPath(); ctx.arc(tx*TILE+16, ty*TILE+15, 11, 0, Math.PI*2); ctx.fill();
+          ctx.beginPath(); ctx.arc(cx, cy + 2, r, 0, Math.PI*2); ctx.fill();
           ctx.fillStyle = "#3d8a3d";
-          ctx.beginPath(); ctx.arc(tx*TILE+15, ty*TILE+13, 9, 0, Math.PI*2); ctx.fill();
+          ctx.beginPath(); ctx.arc(cx - 1, cy, r - 2, 0, Math.PI*2); ctx.fill();
           ctx.fillStyle = "#5aaa55";
-          ctx.beginPath(); ctx.arc(tx*TILE+12, ty*TILE+10, 4, 0, Math.PI*2); ctx.fill();
+          ctx.beginPath(); ctx.arc(cx - 3, cy - 3, Math.max(2, r - 7), 0, Math.PI*2); ctx.fill();
+        };
+        if (variant === 0) {
+          tree(tx*TILE+16, ty*TILE+13, 11);
+        } else if (variant === 1) {
+          tree(tx*TILE+10, ty*TILE+15, 9);   // 左前
+          tree(tx*TILE+21, ty*TILE+11, 10);  // 右后（略大略高）
+        } else {
+          tree(tx*TILE+16, ty*TILE+9, 8);    // 后中
+          tree(tx*TILE+9, ty*TILE+16, 9);    // 前左
+          tree(tx*TILE+23, ty*TILE+16, 9);   // 前右
         }
       }
       else if (ch === "v") {   // 井（图像；兜底灰块）
@@ -244,14 +250,43 @@ function draw() {
         ctx.fillStyle = "#5a8ac0";
         ctx.fillRect(tx*TILE+10, ty*TILE+17, 3, 3);
       }
-      else if (ch === "B") ctx.fillRect(tx * TILE, ty * TILE, TILE, 8);
+      else if (ch === "B") {
+        // 房屋：顶部格画棕瓦屋顶（带檐口和瓦楞），其余格画米色墙身（带墙裙、间或窗户）
+        ctx.fillStyle = "#c9a876";
+        ctx.fillRect(tx * TILE, ty * TILE, TILE, TILE);
+        if (tileAt(c.x + tx, c.y + ty - 1) !== "B") {
+          ctx.fillStyle = "#8a4a2a";                       // 屋顶棕瓦
+          ctx.fillRect(tx * TILE, ty * TILE, TILE, 14);
+          ctx.fillStyle = "#a85a32";                       // 瓦楞
+          for (let wi = 0; wi < 4; wi++) ctx.fillRect(tx*TILE+3+wi*8, ty*TILE+2, 2, 11);
+          ctx.fillStyle = "#6a3420";                       // 檐口线
+          ctx.fillRect(tx * TILE, ty * TILE + 13, TILE, 3);
+        } else {
+          ctx.fillStyle = "#b08a5a";                       // 墙裙
+          ctx.fillRect(tx * TILE, ty * TILE + 28, TILE, 4);
+          if ((c.x + tx) % 3 === 1) {                      // 间或一扇窗
+            ctx.fillStyle = "#5a8ac0";
+            ctx.fillRect(tx*TILE+13, ty*TILE+11, 6, 6);
+          }
+        }
+      }
       else if (ch === "P") { ctx.fillRect(tx*TILE, ty*TILE, TILE, 10); ctx.fillRect(tx*TILE+6, ty*TILE+18, 20, 4); }
       else if (ch === "R") { ctx.fillRect(tx*TILE+4, ty*TILE+6, 10, 8); ctx.fillRect(tx*TILE+18, ty*TILE+18, 9, 7); }
       else if (ch === "W" && (tx + ty) % 2 === 0) ctx.fillRect(tx*TILE+6, ty*TILE+14, 20, 2);
       else if (ch === "M") ctx.fillRect(tx*TILE+2, ty*TILE+8, 28, 3);
       else if (ch === ".") { ctx.fillRect(tx*TILE+8, ty*TILE+9, 2, 4); ctx.fillRect(tx*TILE+22, ty*TILE+20, 2, 4); }
       else if (ch === "C") { ctx.beginPath(); ctx.arc(tx*TILE+16, ty*TILE+18, 10, Math.PI, 0); ctx.fill(); }
-      else if (ch === "D") ctx.fillRect(tx*TILE+10, ty*TILE+4, 12, 26);
+      else if (ch === "D") {
+        // 店门：米色墙 + 深色门洞 + 门楣
+        ctx.fillStyle = "#c9a876";
+        ctx.fillRect(tx * TILE, ty * TILE, TILE, TILE);
+        ctx.fillStyle = "#b08a5a";
+        ctx.fillRect(tx * TILE, ty * TILE + 28, TILE, 4);
+        ctx.fillStyle = "#6a4a2a";
+        ctx.fillRect(tx*TILE+8, ty*TILE+5, 16, 4);
+        ctx.fillStyle = "#3a2a1a";
+        ctx.fillRect(tx*TILE+10, ty*TILE+8, 12, 24);
+      }
       else if (ch === "G") { ctx.fillRect(tx*TILE+4, ty*TILE+2, 24, 6); }
       else if (ch === "E") { ctx.fillRect(tx*TILE+8, ty*TILE+8, 16, 4); ctx.fillRect(tx*TILE+8, ty*TILE+16, 16, 4); }
       else if (ch === ",") { ctx.fillRect(tx*TILE+2, ty*TILE+6, 12, 9); ctx.fillRect(tx*TILE+18, ty*TILE+17, 12, 9); }
