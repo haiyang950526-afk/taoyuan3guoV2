@@ -30,6 +30,11 @@ MAPS["ch06_xiangyang"] = {
     { x: 12, y: 2, text: "书", color: "#ffd166" },
   ],
   npcs: [
+    // 城门口告示牌（南门内侧路旁）
+    { id: "board", x: 12, y: 16, color: "#8a7a5a", name: "告示牌",
+      lines: ["告示：此处是襄阳。",
+              "南门出去是新野野外。",
+              "西北：旅店　东北：文房铺（计策书）　东南：编成所（老兵）"] },
     { id: "inn",  x: 4,  y: 5,  color: "#c98a4b", name: "旅店老板", shop: "ch06b_inn" },
     // 文房铺老板已迁入店内（门口 D 格朝门下钻）
     { id: "camp", x: 16, y: 11, color: "#7a8a9a", name: "老兵", facility: "camp" },
@@ -52,7 +57,9 @@ MAPS["ch06_xiangyang"] = {
     { x: 10, y: 17, to: { map: "ch06_field", x: 10, y: 1 } },
     { x: 11, y: 17, to: { map: "ch06_field", x: 10, y: 1 } },
     // 文房铺室内下钻（朝门才进，路过不触发）
-    { x: 12, y: 5,  face: [0, -1], to: { map: "ch06_book_in", x: 4, y: 4 } },
+    { x: 12, y: 5,  face: [0, -1], to: { map: "ch06_book_in", x: 7, y: 8 } },
+    // 民房下钻（朝门才进，路过不触发）
+    { x: 12, y: 11, face: [0, -1], to: { map: "ch06_xiangyang_house_in", x: 7, y: 8 } },
   ],
 };
 

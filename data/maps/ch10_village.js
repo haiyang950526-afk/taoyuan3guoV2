@@ -40,10 +40,10 @@ MAPS["ch10_village"] = {
     { x: 9, y: 13, to: { map: "ch10_field", x: 9, y: 13 } },
     { x: 10, y: 13, to: { map: "ch10_field", x: 9, y: 13 } },
     // 客栈/药铺室内下钻（朝门才进，路过不触发）
-    { x: 3, y: 5, face: [0, -1], to: { map: "ch10_village_inn_in", x: 4, y: 4 } },
-    { x: 12, y: 5, face: [0, -1], to: { map: "ch10_village_item_in", x: 4, y: 4 } },
+    { x: 3, y: 5, face: [0, -1], to: { map: "ch10_village_inn_in", x: 7, y: 8 } },
+    { x: 12, y: 5, face: [0, -1], to: { map: "ch10_village_item_in", x: 7, y: 8 } },
     // 民房下钻（朝门才进，路过不触发）
-    { x: 3, y: 11, face: [0, -1], to: { map: "ch10_village_house_in", x: 5, y: 6 } },
+    { x: 3, y: 11, face: [0, -1], to: { map: "ch10_village_house_in", x: 7, y: 8 } },
   ],
 };
 

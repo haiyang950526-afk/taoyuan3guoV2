@@ -6,9 +6,9 @@ MAPS["ch05_gucheng"] = {
   grid: [
     "RRRRRRRRRRRRRRRR",
     "R..............R",
-    "R..BBBB........R",
-    "R..BBBB....T...R",
-    "R..BDBB........R",
+    "R..BBBBBBBB....R",
+    "R..BBBBBBBBT...R",
+    "R..BDBBBDBB....R",
     "R..............R",
     "R...,T.....T...R",
     "R...,..........R",
@@ -23,6 +23,11 @@ MAPS["ch05_gucheng"] = {
     { x: 4,  y: 2, text: "客", color: "#ffd166" },
   ],
   npcs: [
+    // 城门口告示牌（西门内侧路旁）
+    { id: "board", x: 1, y: 7, color: "#8a7a5a", name: "告示牌",
+      lines: ["告示：此处是古城。",
+              "西门出去是卧牛山。",
+              "城西北有旅店，可歇脚投宿。"] },
     { id: "inn", x: 4, y: 5, color: "#c98a4b", name: "旅店老板", shop: "ch05g_inn" },
     // 张飞：释疑后在城中，收束本章
     { id: "zhangfei5", x: 8, y: 7, color: "#5c6478", name: "张飞",
@@ -68,6 +73,8 @@ MAPS["ch05_gucheng"] = {
   ],
   transitions: [
     { x: 0, y: 8, to: { map: "ch05_woniu", x: 14, y: 6 } },
+    // 民房下钻（朝门才进，路过不触发）
+    { x: 8, y: 5, face: [0, -1], to: { map: "ch05_gucheng_house_in", x: 7, y: 8 } },
   ],
 };
 

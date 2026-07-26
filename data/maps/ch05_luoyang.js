@@ -6,9 +6,9 @@ MAPS["ch05_luoyang"] = {
   grid: [
     "##########GG##########",
     "#.......,,,,.........#",
-    "#..BBBB...BBBB.......#",
-    "#..BBBB...BBBB....T..#",
-    "#..BDBB...BBDB.......#",
+    "#..BBBB...BBBBBBBB...#",
+    "#..BBBB...BBBBBBBBT..#",
+    "#..BDBB...BBDBBDBB...#",
     "#,,,,,,,,,,,,,,,,,,,,#",
     "#...T...,,.....T.....#",
     "#.......,,...........#",
@@ -34,9 +34,10 @@ MAPS["ch05_luoyang"] = {
   npcs: [
     // 城门口告示牌
     { id: "board", x: 12, y: 16, color: "#8a7a5a", name: "告示牌",
-      lines: ["告示：西：旅店·杂货店　东：武器店·防具店",
-              "东南：编成所（老兵）",
-              "北门通向汜水关"] },
+      lines: ["告示：此处是洛阳。",
+              "南门出去是东岭关；北门通向汜水关（时机未到暂不能通行）。",
+              "西街：旅店·杂货店　东街：武器店·防具店",
+              "东南：编成所（老兵）"] },
     // 店主已迁入各自店内（门口 D 格朝门下钻）
     { id: "camp",   x: 16, y: 11, color: "#7a8a9a", name: "老兵", facility: "camp" },
     { id: "v1",     x: 7,  y: 7,  color: "#4f8cff", name: "市民",
@@ -58,10 +59,12 @@ MAPS["ch05_luoyang"] = {
     { x: 10, y: 0,  if: { flag: "q5", is: "hanfu" }, to: { map: "ch05_sishui", x: 1, y: 8 } },
     { x: 11, y: 0,  if: { flag: "q5", is: "hanfu" }, to: { map: "ch05_sishui", x: 1, y: 8 } },
     // 店铺室内下钻（朝门才进，路过不触发）
-    { x: 4,  y: 5,  face: [0, -1], to: { map: "ch05_inn_in", x: 4, y: 4 } },
-    { x: 12, y: 5,  face: [0, -1], to: { map: "ch05_weapon_in", x: 4, y: 4 } },
-    { x: 12, y: 11, face: [0, -1], to: { map: "ch05_armor_in", x: 4, y: 4 } },
-    { x: 4,  y: 11, face: [0, -1], to: { map: "ch05_item_in", x: 4, y: 4 } },
+    { x: 4,  y: 5,  face: [0, -1], to: { map: "ch05_inn_in", x: 7, y: 8 } },
+    { x: 12, y: 5,  face: [0, -1], to: { map: "ch05_weapon_in", x: 7, y: 8 } },
+    { x: 12, y: 11, face: [0, -1], to: { map: "ch05_armor_in", x: 7, y: 8 } },
+    { x: 4,  y: 11, face: [0, -1], to: { map: "ch05_item_in", x: 7, y: 8 } },
+    // 民房下钻（朝门才进，路过不触发）
+    { x: 15, y: 5, face: [0, -1], to: { map: "ch05_luoyang_house_in", x: 7, y: 8 } },
   ],
 };
 

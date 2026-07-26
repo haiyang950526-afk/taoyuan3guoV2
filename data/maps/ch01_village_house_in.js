@@ -4,14 +4,16 @@ var MAPS = typeof MAPS !== "undefined" ? MAPS : {};
 MAPS["ch01_village_house_in"] = {
   name: "民房",
   grid: [
-    "BBBBBBBBBBBB",
-    "BLLLLLLLLLLB",
-    "BLLLLLLLLLLB",
-    "BLLLLLLLLLLB",
-    "BLLLLLLLLLLB",
-    "BLLLLLLLLLLB",
-    "BLLLLLLLLLLB",
-    "BBBBB,,BBBBB",
+    "BBBBBBBBBBBBBBBB",
+    "BLLLLLBLLLLLLLLB",
+    "BLLLLLBLLLLLLLLB",
+    "BLLLLLBLLLLLLLLB",
+    "BLLLLLBLLLLLLLLB",
+    "BLLLLLBLLLLLLLLB",
+    "BBBBLLBLLLcttcLB",
+    "BLLLLLLLLLLLLLLB",
+    "BLLLLLLLLLLLLLLB",
+    "BBBBBBB,,BBBBBBB",
   ],
   encounterTiles: [],
   npcs: [
@@ -21,8 +23,8 @@ MAPS["ch01_village_house_in"] = {
   chests: [], // 预留宝箱位（未来支线用）
   transitions: [
     // 门口：回郯南村（落在民房门旁的路上）
-    { x: 5, y: 7, to: { map: "ch01_village", x: 4, y: 11 } },
-    { x: 6, y: 7, to: { map: "ch01_village", x: 4, y: 11 } },
+    { x: 7, y: 9, to: { map: "ch01_village", x: 4, y: 11 } },
+    { x: 8, y: 9, to: { map: "ch01_village", x: 4, y: 11 } },
   ],
 };
 

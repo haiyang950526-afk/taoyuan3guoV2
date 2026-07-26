@@ -6,9 +6,9 @@ MAPS["ch11_hanzhong"] = {
   grid: [
     "##########GG##########",
     "#.......,,,,.........#",
-    "#..BBBB...BBBB.......#",
-    "#..BBBB...BBBB....T..#",
-    "#..BDBB...BBDB.......#",
+    "#..BBBB...BBBBBBBB...#",
+    "#..BBBB...BBBBBBBBT..#",
+    "#..BDBB...BBDBBDBB...#",
     "#,,,,,,,,,,,,,,,,,,,,#",
     "#...T...,,.....T.....#",
     "#.......,,...........#",
@@ -34,9 +34,10 @@ MAPS["ch11_hanzhong"] = {
   npcs: [
     // 北门口告示牌
     { id: "board", x: 12, y: 1, color: "#8a7a5a", name: "告示牌",
-      lines: ["告示：汉中军需，北伐专用。",
-              "西：军需客栈·药材铺　东：武器·防具",
-              "东南：铁匠铺·编成所　北门出兵天水"] },
+      lines: ["告示：此处是汉中。",
+              "北门出兵天水（时机未到暂不能通行）。",
+              "西街：军需客栈·药材铺　东街：武器·防具",
+              "东南：铁匠铺·编成所（老兵）"] },
     // 店主已迁入各自店内（门口 D 格朝门下钻）
     { id: "smith",  x: 16, y: 11, color: "#a87a4a", name: "铁匠", facility: "smith" },
     { id: "camp",   x: 16, y: 13, color: "#7a8a9a", name: "老兵", facility: "camp" },
@@ -55,10 +56,12 @@ MAPS["ch11_hanzhong"] = {
     { x: 10, y: 0,  if: { flag: "q11", in: ["tianshui", "jiangwei"] }, to: { map: "ch11_tianshui", x: 8, y: 10 } },
     { x: 11, y: 0,  if: { flag: "q11", in: ["tianshui", "jiangwei"] }, to: { map: "ch11_tianshui", x: 8, y: 10 } },
     // 店铺室内下钻（朝门才进，路过不触发）
-    { x: 4,  y: 5,  face: [0, -1], to: { map: "ch11_inn_in", x: 4, y: 4 } },
-    { x: 12, y: 5,  face: [0, -1], to: { map: "ch11_weapon_in", x: 4, y: 4 } },
-    { x: 12, y: 11, face: [0, -1], to: { map: "ch11_armor_in", x: 4, y: 4 } },
-    { x: 4,  y: 11, face: [0, -1], to: { map: "ch11_item_in", x: 4, y: 4 } },
+    { x: 4,  y: 5,  face: [0, -1], to: { map: "ch11_inn_in", x: 7, y: 8 } },
+    { x: 12, y: 5,  face: [0, -1], to: { map: "ch11_weapon_in", x: 7, y: 8 } },
+    { x: 12, y: 11, face: [0, -1], to: { map: "ch11_armor_in", x: 7, y: 8 } },
+    { x: 4,  y: 11, face: [0, -1], to: { map: "ch11_item_in", x: 7, y: 8 } },
+    // 民房下钻（朝门才进，路过不触发）
+    { x: 15, y: 5, face: [0, -1], to: { map: "ch11_hanzhong_house_in", x: 7, y: 8 } },
   ],
 };
 

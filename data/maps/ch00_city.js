@@ -6,9 +6,9 @@ MAPS["ch00_city"] = {
   name: "徐州城",
   grid: [
     "########################",
-    "#.....BBBBBBBBBB.......#",
-    "#.....BPPPPPPPPB.......#",
-    "#.....BBBBDBBBBB.......#",
+    "#.....BBBBBBBBBBBBBB...#",
+    "#.....BPPPPPPPPBBBBB...#",
+    "#.....BBBBDBBBBBBDBB...#",
     "#.........,,...........#",
     "#....T....,,......T....#",
     "#.BBBBBBBB,,..BBBBBBBB.#",
@@ -38,9 +38,10 @@ MAPS["ch00_city"] = {
   npcs: [
     // 城门口告示牌
     { id: "board1", x: 12, y: 16, color: "#8a7a5a", name: "告示牌",
-      lines: ["告示：沿主路一直往北，即是太守府。",
+      lines: ["告示：此处是徐州城。",
+              "南门出去即是徐州城外。",
               "横街西：旅店·酒馆　横街东：武器店·防具店",
-              "南横街：杂货店（西）·训练所（东）"] },
+              "南横街：杂货店（西）·训练所（东）　北：太守府　东南：编成所（老兵）"] },
     // 主路十字路口告示牌（立在路口东南角，不挡路面）
     { id: "board2", x: 12, y: 10, color: "#8a7a5a", name: "告示牌",
       lines: ["告示：西：旅店·酒馆　东：武器店·防具店",
@@ -99,12 +100,14 @@ MAPS["ch00_city"] = {
     // 太守府大殿（朝北向门口多走一步才进）
     { x: 10, y: 4,  face: [0, -1], to: { map: "ch00_palace", x: 5, y: 7 } },
     // 店铺室内下钻（同样朝门才进，路过不触发）
-    { x: 3,  y: 9,  face: [0, -1], to: { map: "ch00_inn_in", x: 4, y: 4 } },
-    { x: 7,  y: 9,  face: [0, -1], to: { map: "ch00_tavern_in", x: 4, y: 4 } },
-    { x: 15, y: 9,  face: [0, -1], to: { map: "ch00_weapon_in", x: 4, y: 4 } },
-    { x: 19, y: 9,  face: [0, -1], to: { map: "ch00_armor_in", x: 4, y: 4 } },
-    { x: 3,  y: 14, face: [0, -1], to: { map: "ch00_item_in", x: 4, y: 4 } },
-    { x: 19, y: 14, face: [0, -1], to: { map: "ch00_dojo_in", x: 4, y: 4 } },
+    { x: 3,  y: 9,  face: [0, -1], to: { map: "ch00_inn_in", x: 7, y: 8 } },
+    { x: 7,  y: 9,  face: [0, -1], to: { map: "ch00_tavern_in", x: 7, y: 8 } },
+    { x: 15, y: 9,  face: [0, -1], to: { map: "ch00_weapon_in", x: 7, y: 8 } },
+    { x: 19, y: 9,  face: [0, -1], to: { map: "ch00_armor_in", x: 7, y: 8 } },
+    { x: 3,  y: 14, face: [0, -1], to: { map: "ch00_item_in", x: 7, y: 8 } },
+    { x: 19, y: 14, face: [0, -1], to: { map: "ch00_dojo_in", x: 7, y: 8 } },
+    // 民房下钻（朝门才进，路过不触发）
+    { x: 17, y: 4, face: [0, -1], to: { map: "ch00_city_house_in", x: 7, y: 8 } },
   ],
 };
 

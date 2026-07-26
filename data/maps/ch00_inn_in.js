@@ -4,12 +4,16 @@ var MAPS = typeof MAPS !== "undefined" ? MAPS : {};
 MAPS["ch00_inn_in"] = {
   name: "旅店",
   grid: [
-    "BBBBBBBB",
-    "BLLLLLLB",
-    "BLLLLLLB",
-    "BLLLLLLB",
-    "BLLLLLLB",
-    "BBBB,BBB",
+    "BBBBBBBBBBBBBBBB",
+    "BLLLLLBLLLLLLLLB",
+    "BLLLLLBLLLLLLLLB",
+    "BLLLLLBLLLBBBBBB",
+    "BLLLLLBLLLLLLLLB",
+    "BLLLLLBLLLLLLLLB",
+    "BBBBLLBLLLcttcLB",
+    "BLLLLLLLLLLLLLLB",
+    "BLLLLLLLLLLLLLLB",
+    "BBBBBBB,,BBBBBBB",
   ],
   encounterTiles: [],
   npcs: [
@@ -17,7 +21,8 @@ MAPS["ch00_inn_in"] = {
   ],
   chests: [],
   transitions: [
-    { x: 4, y: 5, to: { map: "ch00_city", x: 4, y: 9 } },
+    { x: 7, y: 9, to: { map: "ch00_city", x: 4, y: 9 } },
+    { x: 8, y: 9, to: { map: "ch00_city", x: 4, y: 9 } },
   ],
 };
 

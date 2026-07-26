@@ -17,9 +17,9 @@ MAPS["ch02_xiaopei"] = {
     "#..BDBB.,,BBDB.......#",
     "#,,,,,,,,,,,,,,,,,,,,#",
     "#.....T...,,.T.......#",
-    "#.........,,.........#",
-    "#.........,,.........#",
-    "#....T....,,.T.......#",
+    "#BBBB.....,,.........#",
+    "#BBBB.....,,.........#",
+    "#BDBBT....,,.T.......#",
     "#.........,,.........#",
     "##########GG##########",
   ],
@@ -34,9 +34,10 @@ MAPS["ch02_xiaopei"] = {
   npcs: [
     // 北门口告示牌
     { id: "board", x: 12, y: 1, color: "#8a7a5a", name: "告示牌",
-      lines: ["告示：西：旅店·杂货店　东：武器店·防具店",
-              "东南：编成所（老兵）　南门通往下邳方向",
-              "北门外即是旷野"] },
+      lines: ["告示：此处是小沛。",
+              "北门出去是沛县郊野；南门通往下邳郊野（时机未到暂不能通行）。",
+              "西街：旅店·杂货店　东街：武器店·防具店",
+              "东南：编成所（老兵）"] },
     // 店主已迁入各自店内（门口 D 格朝门下钻）
     { id: "v1",     x: 6,  y: 7,  color: "#4f8cff", name: "村民", linesKey: "ch02.xpVillager" },
     { id: "v2",     x: 15, y: 13, color: "#d88a3a", name: "老者", linesKey: "ch02.xpElder" },
@@ -75,10 +76,12 @@ MAPS["ch02_xiaopei"] = {
     { x: 10, y: 17, if: { flag: "q2", in: ["shed", "lost", "done"] }, to: { map: "ch02_field_south", x: 10, y: 1 } },
     { x: 11, y: 17, if: { flag: "q2", in: ["shed", "lost", "done"] }, to: { map: "ch02_field_south", x: 10, y: 1 } },
     // 店铺室内下钻（朝门才进，路过不触发）
-    { x: 4,  y: 5,  face: [0, -1], to: { map: "ch02_inn_in", x: 4, y: 4 } },
-    { x: 12, y: 5,  face: [0, -1], to: { map: "ch02_weapon_in", x: 4, y: 4 } },
-    { x: 13, y: 5,  face: [0, -1], to: { map: "ch02_armor_in", x: 4, y: 4 } },
-    { x: 4,  y: 11, face: [0, -1], to: { map: "ch02_item_in", x: 4, y: 4 } },
+    { x: 4,  y: 5,  face: [0, -1], to: { map: "ch02_inn_in", x: 7, y: 8 } },
+    { x: 12, y: 5,  face: [0, -1], to: { map: "ch02_weapon_in", x: 7, y: 8 } },
+    { x: 13, y: 5,  face: [0, -1], to: { map: "ch02_armor_in", x: 7, y: 8 } },
+    { x: 4,  y: 11, face: [0, -1], to: { map: "ch02_item_in", x: 7, y: 8 } },
+    // 民房下钻（朝门才进，路过不触发）
+    { x: 2, y: 16, face: [0, -1], to: { map: "ch02_xiaopei_house_in", x: 7, y: 8 } },
   ],
 };
 

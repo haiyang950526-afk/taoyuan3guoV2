@@ -4,12 +4,16 @@ var MAPS = typeof MAPS !== "undefined" ? MAPS : {};
 MAPS["ch06_item_in"] = {
   name: "杂货店",
   grid: [
-    "BBBBBBBB",
-    "BLLLLLLB",
-    "BLLLLLLB",
-    "BLLLLLLB",
-    "BLLLLLLB",
-    "BBBB,BBB",
+    "BBBBBBBBBBBBBBBB",
+    "BLLLLLBLLLLLLLLB",
+    "BLLLLLBLLLLLLLLB",
+    "BLLLLLBLLLBBBBBB",
+    "BLLLLLBLLLLLLLLB",
+    "BLLLLLBLLLLLLLLB",
+    "BBBBLLBLLLcttcLB",
+    "BLLLLLLLLLLLLLLB",
+    "BLLLLLLLLLLLLLLB",
+    "BBBBBBB,,BBBBBBB",
   ],
   encounterTiles: [],
   npcs: [
@@ -22,7 +26,8 @@ MAPS["ch06_item_in"] = {
   ],
   chests: [],
   transitions: [
-    { x: 4, y: 5, to: { map: "ch06_xinye", x: 5, y: 11 } },
+    { x: 7, y: 9, to: { map: "ch06_xinye", x: 5, y: 11 } },
+    { x: 8, y: 9, to: { map: "ch06_xinye", x: 5, y: 11 } },
   ],
 };
 

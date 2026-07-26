@@ -6,9 +6,9 @@ MAPS["ch06_xinye"] = {
   grid: [
     "##########GG##########",
     "#.......,,,,.........#",
-    "#..BBBB...BBBB.......#",
-    "#..BBBB...BBBB....T..#",
-    "#..BDBB...BBDB.......#",
+    "#..BBBB...BBBBBBBB...#",
+    "#..BBBB...BBBBBBBBT..#",
+    "#..BDBB...BBDBBDBB...#",
     "#,,,,,,,,,,,,,,,,,,,,#",
     "#...T...,,.....T.....#",
     "#.......,,...........#",
@@ -34,9 +34,10 @@ MAPS["ch06_xinye"] = {
   npcs: [
     // 北门口告示牌
     { id: "board", x: 12, y: 1, color: "#8a7a5a", name: "告示牌",
-      lines: ["告示：西：旅店·杂货店　东：武器店·防具店",
-              "东南：编成所（老兵）",
-              "北门外即是旷野"] },
+      lines: ["告示：此处是新野城。",
+              "北门出去是新野野外；南门通往博望坡（时机未到暂不能通行）。",
+              "西街：旅店·杂货店　东街：武器店·防具店",
+              "东南：编成所（老兵）"] },
     // 商店：第六章价（q7 出现后隐藏）/ 第七章战时价（priceMult 1.2）
     // 商店：第六章价 / 第七章战时价双店主，均已迁入各自店内（门口 D 格朝门下钻）
     { id: "camp", x: 16, y: 11, color: "#7a8a9a", name: "老兵", facility: "camp" },
@@ -92,10 +93,12 @@ MAPS["ch06_xinye"] = {
     { x: 10, y: 17, if: { flag: "q7", exists: true }, to: { map: "ch07_bowang", x: 10, y: 12 } },
     { x: 11, y: 17, if: { flag: "q7", exists: true }, to: { map: "ch07_bowang", x: 10, y: 12 } },
     // 店铺室内下钻（朝门才进，路过不触发）
-    { x: 4,  y: 5,  face: [0, -1], to: { map: "ch06_inn_in", x: 4, y: 4 } },
-    { x: 12, y: 5,  face: [0, -1], to: { map: "ch06_weapon_in", x: 4, y: 4 } },
-    { x: 12, y: 11, face: [0, -1], to: { map: "ch06_armor_in", x: 4, y: 4 } },
-    { x: 4,  y: 11, face: [0, -1], to: { map: "ch06_item_in", x: 4, y: 4 } },
+    { x: 4,  y: 5,  face: [0, -1], to: { map: "ch06_inn_in", x: 7, y: 8 } },
+    { x: 12, y: 5,  face: [0, -1], to: { map: "ch06_weapon_in", x: 7, y: 8 } },
+    { x: 12, y: 11, face: [0, -1], to: { map: "ch06_armor_in", x: 7, y: 8 } },
+    { x: 4,  y: 11, face: [0, -1], to: { map: "ch06_item_in", x: 7, y: 8 } },
+    // 民房下钻（朝门才进，路过不触发）
+    { x: 15, y: 5, face: [0, -1], to: { map: "ch06_xinye_house_in", x: 7, y: 8 } },
   ],
 };
 

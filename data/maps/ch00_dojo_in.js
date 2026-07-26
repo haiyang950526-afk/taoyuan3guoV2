@@ -4,12 +4,16 @@ var MAPS = typeof MAPS !== "undefined" ? MAPS : {};
 MAPS["ch00_dojo_in"] = {
   name: "训练所",
   grid: [
-    "BBBBBBBB",
-    "BLLLLLLB",
-    "BLLLLLLB",
-    "BLLLLLLB",
-    "BLLLLLLB",
-    "BBBB,BBB",
+    "BBBBBBBBBBBBBBBB",
+    "BLLLLLBLLLLLLLLB",
+    "BLLLLLBLLLLLLLLB",
+    "BLLLLLBLLLBBBBBB",
+    "BLLLLLBLLLLLLLLB",
+    "BLLLLLBLLLLLLLLB",
+    "BBBBLLBLLLcttcLB",
+    "BLLLLLLLLLLLLLLB",
+    "BLLLLLLLLLLLLLLB",
+    "BBBBBBB,,BBBBBBB",
   ],
   encounterTiles: [],
   npcs: [
@@ -17,7 +21,8 @@ MAPS["ch00_dojo_in"] = {
   ],
   chests: [],
   transitions: [
-    { x: 4, y: 5, to: { map: "ch00_city", x: 20, y: 14 } },
+    { x: 7, y: 9, to: { map: "ch00_city", x: 20, y: 14 } },
+    { x: 8, y: 9, to: { map: "ch00_city", x: 20, y: 14 } },
   ],
 };
 

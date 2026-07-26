@@ -31,6 +31,12 @@ MAPS["ch09_changsha"] = {
     { x: 4,  y: 8, text: "药", color: "#ffd166" },
   ],
   npcs: [
+    // 城门口告示牌（南门内侧路旁）
+    { id: "board", x: 12, y: 16, color: "#8a7a5a", name: "告示牌",
+      lines: ["告示：此处是长沙城。",
+              "南门出去是荆南南野；北门通零陵（时机未到暂不能通行）。",
+              "西街：旅店·杂货店　东街：武器店",
+              "东南：编成所（老兵）"] },
     { id: "inn",    x: 4,  y: 5,  color: "#c98a4b", name: "旅店老板",   shop: "ch09_inn" },
     { id: "weapon", x: 12, y: 5,  color: "#8a93a8", name: "武器店老板", shop: "ch09_weapon" },
     { id: "item",   x: 4,  y: 11, color: "#7ee2a0", name: "杂货店老板", shop: "ch09_item" },
@@ -63,6 +69,8 @@ MAPS["ch09_changsha"] = {
     // 南门：零陵（黄忠收服后开放）
     { x: 10, y: 0,  if: { flag: "q9", is: "changsha" }, to: { map: "ch09_lingling", x: 10, y: 16 } },
     { x: 11, y: 0,  if: { flag: "q9", is: "changsha" }, to: { map: "ch09_lingling", x: 10, y: 16 } },
+    // 民房下钻（朝门才进，路过不触发）
+    { x: 12, y: 11, face: [0, -1], to: { map: "ch09_changsha_house_in", x: 7, y: 8 } },
   ],
 };
 

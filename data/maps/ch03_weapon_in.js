@@ -4,12 +4,16 @@ var MAPS = typeof MAPS !== "undefined" ? MAPS : {};
 MAPS["ch03_weapon_in"] = {
   name: "武器店",
   grid: [
-    "BBBBBBBB",
-    "BLLLLLLB",
-    "BLLLLLLB",
-    "BLLLLLLB",
-    "BLLLLLLB",
-    "BBBB,BBB",
+    "BBBBBBBBBBBBBBBB",
+    "BLLLLLBLLLLLLLLB",
+    "BLLLLLBLLLLLLLLB",
+    "BLLLLLBLLLBBBBBB",
+    "BLLLLLBLLLLLLLLB",
+    "BLLLLLBLLLLLLLLB",
+    "BBBBLLBLLLcttcLB",
+    "BLLLLLLLLLLLLLLB",
+    "BLLLLLLLLLLLLLLB",
+    "BBBBBBB,,BBBBBBB",
   ],
   encounterTiles: [],
   npcs: [
@@ -19,7 +23,8 @@ MAPS["ch03_weapon_in"] = {
   ],
   chests: [],
   transitions: [
-    { x: 4, y: 5, to: { map: "ch03_xudu", x: 11, y: 9 } },
+    { x: 7, y: 9, to: { map: "ch03_xudu", x: 11, y: 9 } },
+    { x: 8, y: 9, to: { map: "ch03_xudu", x: 11, y: 9 } },
   ],
 };
 

@@ -29,6 +29,11 @@ MAPS["ch09_lingling"] = {
     { x: 4,  y: 2, text: "客", color: "#ffd166" },
   ],
   npcs: [
+    // 城门口告示牌（南门内侧路旁）
+    { id: "board", x: 12, y: 16, color: "#8a7a5a", name: "告示牌",
+      lines: ["告示：此处是零陵。",
+              "南门出去是长沙城。",
+              "城西北有旅店，可歇脚投宿。"] },
     { id: "inn",  x: 4, y: 5, color: "#c98a4b", name: "旅店老板", shop: "ch09_inn" },
     // 刘度：传檄而定
     { id: "liudu", x: 10, y: 1, color: "#b8a05a", name: "刘度",
@@ -44,6 +49,8 @@ MAPS["ch09_lingling"] = {
   transitions: [
     { x: 10, y: 17, to: { map: "ch09_changsha", x: 10, y: 1 } },
     { x: 11, y: 17, to: { map: "ch09_changsha", x: 10, y: 1 } },
+    // 民房下钻（朝门才进，路过不触发）
+    { x: 12, y: 11, face: [0, -1], to: { map: "ch09_lingling_house_in", x: 7, y: 8 } },
   ],
 };
 
