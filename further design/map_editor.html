@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<title>桃园三国 · 地图小工具</title>
+<style>
+  body { background: #141c30; color: #e8ecf4; font: 14px/1.6 sans-serif; margin: 0; padding: 12px; }
+  h1 { font-size: 18px; color: #ffd166; margin: 0 0 8px; }
+  #bar { margin-bottom: 10px; }
+  #wrap { display: flex; gap: 14px; align-items: flex-start; flex-wrap: wrap; }
+  #palette { width: 190px; }
+  .sw { display: flex; align-items: center; gap: 6px; padding: 3px 6px; border-radius: 6px; cursor: pointer; }
+  .sw.sel { background: #31427a; outline: 1px solid #ffd166; }
+  .sw canvas { border: 1px solid #000; }
+  #cv { border: 2px solid #4a5a88; image-rendering: pixelated; cursor: crosshair; background: #000; }
+  textarea { width: 100%; height: 90px; background: #0e1526; color: #cfe; border: 1px solid #3a4a78; border-radius: 8px; font: 12px/1.4 monospace; }
+  button { background: #24304f; color: #e8ecf4; border: 1px solid #3a4a78; border-radius: 8px; padding: 7px 12px; cursor: pointer; margin: 2px 2px 2px 0; }
+  button.on { outline: 1px solid #ffd166; background: #31427a; }
+  button:disabled { opacity: .4; cursor: default; }
+  select { background: #0e1526; color: #fff; border: 1px solid #3a4a78; border-radius: 6px; padding: 6px; max-width: 260px; }
+  input { width: 52px; background: #0e1526; color: #fff; border: 1px solid #3a4a78; border-radius: 6px; padding: 4px; }
+  .row { margin: 8px 0; }
+  .dim { color: #8a93a8; font-size: 12px; }
+  #status { color: #7ee2a0; font-size: 12px; margin-left: 8px; }
+  #markers div { font: 12px/1.5 monospace; }
+  details { margin-top: 10px; }
+  summary { cursor: pointer; color: #8a93a8; }
+</style>
+</head>
+<body>
+<h1>桃园三国 · 地图小工具 <span class="dim">左键画 / 右键擦成草地 · 请用 Chrome 或 Edge 打开</span></h1>
+<div id="bar">
+  <button id="pickdir">① 选择游戏目录（桃园三国0724 - 副本）</button>
+  <select id="filelist" disabled></select>
+  <button id="load" disabled>② 载入</button>
+  <button id="save" disabled>③ 保存回原文件</button>
+  <span id="status">未连接目录</span>
+</div>
+<div id="wrap">
+  <div id="palette"><b>图块</b><div id="pal"></div>
+    <div class="row"><b>标注</b>（点图放置）<br>
+      <button data-mk="npc">NPC</button><button data-mk="chest">宝箱</button><button data-mk="trans">传送</button><button data-mk="">取消标注</button>
+    </div>
+    <div id="markers"></div>
+  </div>
+  <div>
+    <canvas id="cv"></canvas>
+    <div class="row">宽 <input id="iw" value="20"> 高 <input id="ih" value="14">
+      <button id="resize">应用尺寸（保留内容）</button>
+      <button id="clear">清空为草地</button></div>
+    <details><summary>高级：粘贴导入 / 导出文本（不用目录时的老办法）</summary>
+      <div class="row"><b>导入</b>：粘贴现有地图 JS<br>
+        <textarea id="imp"></textarea>
+        <button id="doimp">解析导入</button></div>
+      <div class="row"><b>导出</b><br>
+        <textarea id="exp" readonly></textarea>
+        <button id="doexp">生成导出</button><button id="copy">复制结果</button></div>
+    </details>
+  </div>
+</div>
+<script>
+"use strict";
+const TILES = {
+  "#": ["#4a5060", "城墙"], "B": ["#8a6a45", "建筑"], "D": ["#3a2a1a", "门"],
+  "G": ["#6a7288", "城门"], "T": ["#3d7a3d", "树"], "W": ["#3a6ac0", "水"],
+  "R": ["#6a5a4a", "山石"], "C": ["#1a1410", "洞口"], "F": ["#3a332c", "洞地"],
+  "E": ["#c9b89a", "洞出口"], "M": ["#a8845a", "桥/渡"], "P": ["#7a5a8a", "宫殿"],
+  ".": ["#4f8a45", "草地"], ",": ["#a89468", "土路"], "L": ["#9a7a52", "室内地板"],
+  "X": ["#7a4a3a", "殿柱"], "s": ["#9a9aa8", "石板路"], "v": ["#8a8a96", "井"],
+  "h": ["#4f8a45", "村庄图标"],
+};
+const Z = 26;
+let W = 20, H = 14, grid = [], sel = ".", markMode = "", marks = [];
+let mapsDir = null, curHandle = null, curName = "", curText = "", dirty = false;
+const cv = document.getElementById("cv"), ctx = cv.getContext("2d");
+const status = t => document.getElementById("status").textContent = t;
+
+function blank() { grid = Array.from({ length: H }, () => Array(W).fill(".")); }
+function drawCell(x, y) {
+  const ch = grid[y][x], col = TILES[ch] || TILES["."];
+  ctx.fillStyle = col[0];
+  ctx.fillRect(x * Z, y * Z, Z, Z);
+  ctx.fillStyle = "rgba(0,0,0,.35)";
+  if (ch === "B") ctx.fillRect(x * Z, y * Z, Z, 6);
+  else if (ch === "D") ctx.fillRect(x * Z + 9, y * Z + 3, 8, 20);
+  else if (ch === "T") { ctx.fillStyle = "#2a5a2a"; ctx.beginPath(); ctx.arc(x*Z+13, y*Z+11, 9, 0, 7); ctx.fill();
+    ctx.fillStyle = "#6a4a2a"; ctx.fillRect(x*Z+11, y*Z+15, 4, 8); }
+  else if (ch === "W") { ctx.fillStyle = "#2a4f96"; ctx.fillRect(x*Z+4, y*Z+12, 18, 2); }
+  else if (ch === "C") { ctx.fillStyle = "#6a5a4a"; ctx.beginPath(); ctx.arc(x*Z+13, y*Z+15, 8, Math.PI, 0); ctx.fill(); }
+  else if (ch === "G") ctx.fillRect(x*Z+3, y*Z+2, 20, 5);
+  else if (ch === "h") { ctx.fillStyle = "#8a4a2a"; ctx.beginPath();
+    ctx.moveTo(x*Z+4, y*Z+13); ctx.lineTo(x*Z+13, y*Z+4); ctx.lineTo(x*Z+22, y*Z+13); ctx.fill();
+    ctx.fillStyle = "#c9a876"; ctx.fillRect(x*Z+6, y*Z+13, 14, 9); }
+  else if (ch === "v") { ctx.fillStyle = "#5a5a64"; ctx.fillRect(x*Z+7, y*Z+11, 12, 12);
+    ctx.fillStyle = "#6a4a2a"; ctx.fillRect(x*Z+5, y*Z+6, 16, 4); }
+  else if (ch === "X") { ctx.fillStyle = "#5a3428"; ctx.beginPath(); ctx.arc(x*Z+13, y*Z+13, 8, 0, 7); ctx.fill(); }
+  ctx.strokeStyle = "rgba(0,0,0,.25)";
+  ctx.strokeRect(x * Z + .5, y * Z + .5, Z, Z);
+}
+function drawMarks() {
+  for (const m of marks) {
+    const c = m.type === "npc" ? "#4f8cff" : m.type === "chest" ? "#e8c84a" : "#ff6a5a";
+    ctx.fillStyle = c;
+    ctx.beginPath(); ctx.arc(m.x * Z + Z - 8, m.y * Z + 8, 6, 0, 7); ctx.fill();
+    ctx.fillStyle = "#000";
+    ctx.font = "bold 9px sans-serif"; ctx.textAlign = "center";
+    ctx.fillText(m.type === "npc" ? "N" : m.type === "chest" ? "宝" : "传", m.x * Z + Z - 8, m.y * Z + 11);
+  }
+}
+function draw() {
+  cv.width = W * Z; cv.height = H * Z;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) drawCell(x, y);
+  drawMarks();
+}
+const pal = document.getElementById("pal");
+for (const ch in TILES) {
+  const d = document.createElement("div");
+  d.className = "sw" + (ch === sel ? " sel" : "");
+  const c = document.createElement("canvas");
+  c.width = c.height = 18;
+  const g = c.getContext("2d");
+  g.fillStyle = TILES[ch][0]; g.fillRect(0, 0, 18, 18);
+  d.appendChild(c);
+  d.appendChild(document.createTextNode(ch + " " + TILES[ch][1]));
+  d.onclick = () => { sel = ch; markMode = "";
+    document.querySelectorAll(".sw").forEach(e => e.classList.remove("sel"));
+    d.classList.add("sel"); };
+  pal.appendChild(d);
+}
+let painting = false;
+function cellAt(e) {
+  const r = cv.getBoundingClientRect();
+  return [Math.floor((e.clientX - r.left) / (r.width / W)),
+          Math.floor((e.clientY - r.top) / (r.height / H))];
+}
+cv.addEventListener("contextmenu", e => e.preventDefault());
+cv.addEventListener("mousedown", e => {
+  painting = true;
+  const [x, y] = cellAt(e);
+  if (x < 0 || y < 0 || x >= W || y >= H) return;
+  if (markMode) {
+    const i = marks.findIndex(m => m.x === x && m.y === y && m.type === markMode);
+    if (i >= 0) marks.splice(i, 1); else marks.push({ type: markMode, x, y });
+    listMarks();
+  } else {
+    grid[y][x] = e.button === 2 ? "." : sel;
+    dirty = true;
+  }
+  draw();
+});
+cv.addEventListener("mousemove", e => {
+  if (!painting || markMode) return;
+  const [x, y] = cellAt(e);
+  if (x < 0 || y < 0 || x >= W || y >= H) return;
+  grid[y][x] = e.buttons === 2 ? "." : sel;
+  dirty = true;
+  draw();
+});
+window.addEventListener("mouseup", () => painting = false);
+function listMarks() {
+  const el = document.getElementById("markers");
+  el.innerHTML = marks.length ? "" : "<span class='dim'>（无标注）</span>";
+  marks.forEach((m, i) => {
+    const d = document.createElement("div");
+    d.textContent = (m.type === "npc" ? "NPC" : m.type === "chest" ? "宝箱" : "传送") +
+      " (" + m.x + "," + m.y + ") ✕";
+    d.style.cursor = "pointer";
+    d.onclick = () => { marks.splice(i, 1); dirty = true; listMarks(); draw(); };
+    el.appendChild(d);
+  });
+}
+document.querySelectorAll("[data-mk]").forEach(b => b.onclick = () => {
+  markMode = b.dataset.mk;
+  document.querySelectorAll("[data-mk]").forEach(x => x.classList.remove("on"));
+  if (markMode) b.classList.add("on");
+});
+document.getElementById("resize").onclick = () => {
+  const nw = Math.max(4, Math.min(60, +document.getElementById("iw").value || W));
+  const nh = Math.max(4, Math.min(60, +document.getElementById("ih").value || H));
+  grid = Array.from({ length: nh }, (_, y) =>
+    Array.from({ length: nw }, (_, x) => (grid[y] && grid[y][x]) || "."));
+  W = nw; H = nh;
+  marks = marks.filter(m => m.x < W && m.y < H);
+  dirty = true; listMarks(); draw();
+};
+document.getElementById("clear").onclick = () => { blank(); marks = []; dirty = true; listMarks(); draw(); };
+
+// ---------------- 解析：grid + 标注 ----------------
+function parseMapText(text) {
+  const gridM = text.match(/grid:\s*\[([\s\S]*?)\]/);
+  if (!gridM) return null;
+  const rows = [...gridM[1].matchAll(/"([^"]*)"/g)].map(m => m[1])
+    .filter(r => r.length && [...r].every(c => TILES[c]));
+  if (!rows.length) return null;
+  const nameM = text.match(/name:\s*"([^"]+)"/);
+  return { rows, name: nameM ? nameM[1] : "" };
+}
+function parseMarks(text) {
+  const out = [];
+  for (const m of text.matchAll(/\{\s*id:\s*"([^"]+)",\s*x:\s*(\d+),\s*y:\s*(\d+)/g))
+    out.push({ type: "npc", x: +m[2], y: +m[3], note: m[1] });
+  for (const m of text.matchAll(/\{\s*x:\s*(\d+),\s*y:\s*(\d+),\s*id:\s*"([^"]+)"/g))
+    out.push({ type: "chest", x: +m[1], y: +m[2], note: m[3] });
+  for (const line of text.split("\n")) {
+    if (!line.includes("to:")) continue;
+    const sm = line.match(/\{\s*x:\s*(\d+),\s*y:\s*(\d+)/);
+    if (sm) out.push({ type: "trans", x: +sm[1], y: +sm[2], note: "" });
+  }
+  return out;
+}
+function loadParsed(p, text) {
+  H = p.rows.length; W = p.rows[0].length;
+  grid = p.rows.map(r => [...r]);
+  marks = parseMarks(text);
+  document.getElementById("iw").value = W;
+  document.getElementById("ih").value = H;
+  dirty = false; listMarks(); draw();
+}
+// ---------------- 本地目录（File System Access API） ----------------
+document.getElementById("pickdir").onclick = async () => {
+  if (!window.showDirectoryPicker) {
+    alert("当前浏览器不支持直接读目录（请用 Chrome/Edge），可用下方「高级」里的粘贴导入");
+    return;
+  }
+  try {
+    const root = await window.showDirectoryPicker();
+    let dir = root;
+    try { dir = (await (await root.getDirectoryHandle("data")).getDirectoryHandle("maps")); }
+    catch (e) { /* 也许直接选了 maps 目录 */ }
+    mapsDir = dir;
+    const sel = document.getElementById("filelist");
+    sel.innerHTML = "";
+    const files = [];
+    for await (const [name, h] of dir.entries())
+      if (name.endsWith(".js")) files.push(name);
+    files.sort();
+    for (const f of files) {
+      const o = document.createElement("option");
+      o.value = o.textContent = f;
+      sel.appendChild(o);
+    }
+    sel.disabled = false;
+    document.getElementById("load").disabled = false;
+    status("已连接：" + root.name + "（" + files.length + " 张地图）");
+  } catch (e) { /* 用户取消 */ }
+};
+document.getElementById("load").onclick = async () => {
+  const fname = document.getElementById("filelist").value;
+  if (!fname) return;
+  if (dirty && !confirm("当前有未保存修改，载入会丢弃，继续？")) return;
+  try {
+    const h = await mapsDir.getFileHandle(fname);
+    curText = await (await h.getFile()).text();
+    const p = parseMapText(curText);
+    if (!p) { alert("没解析出 grid"); return; }
+    curHandle = h; curName = fname;
+    loadParsed(p, curText);
+    document.getElementById("save").disabled = false;
+    status("已载入 " + fname + (p.name ? "（" + p.name + "）" : ""));
+  } catch (e) { alert("读取失败：" + e.message); }
+};
+// 保存：只替换原文件的 grid 块，其他内容（NPC/触发器/台词等）原样保留
+document.getElementById("save").onclick = async () => {
+  if (!curHandle) return;
+  const widths = new Set(grid.map(r => r.length));
+  if (widths.size !== 1) { alert("grid 行宽不一致，不能保存"); return; }
+  if (!confirm("把 grid 写回 " + curName + "？（其他内容原样保留；标注修改不会写回）")) return;
+  try {
+    const gridText = "grid: [\n" + grid.map(r => "    \"" + r.join("") + "\",").join("\n") + "\n  ]";
+    const newText = curText.replace(/grid:\s*\[[\s\S]*?\]/, gridText);
+    if (newText === curText) { alert("替换失败：没找到 grid 块"); return; }
+    const w = await curHandle.createWritable();
+    await w.write(newText);
+    await w.close();
+    curText = newText; dirty = false;
+    status("已保存 " + curName + " ✔");
+  } catch (e) { alert("保存失败：" + e.message); }
+};
+// ---------------- 老办法：粘贴导入 / 导出 ----------------
+document.getElementById("doimp").onclick = () => {
+  const p = parseMapText(document.getElementById("imp").value);
+  if (!p) { alert("没认出地图行"); return; }
+  curHandle = null; curName = "";
+  loadParsed(p, document.getElementById("imp").value);
+};
+document.getElementById("doexp").onclick = () => {
+  let s = "grid: [\n" + grid.map(r => "    \"" + r.join("") + "\",").join("\n") + "\n  ],";
+  const npc = marks.filter(m => m.type === "npc")
+    .map(m => "    { id: \"n" + m.x + "_" + m.y + "\", x: " + m.x + ", y: " + m.y +
+      ", color: \"#4f8cff\", name: \"村民\", lines: [\"台词。\"] },");
+  const ch = marks.filter(m => m.type === "chest")
+    .map((m, i) => "    { x: " + m.x + ", y: " + m.y + ", id: \"c" + (i + 1) + "\", gold: 100 },");
+  const tr = marks.filter(m => m.type === "trans")
+    .map(m => "    { x: " + m.x + ", y: " + m.y + ", to: { map: \"目标图\", x: 0, y: 0 } },");
+  if (npc.length) s += "\n  npcs: [\n" + npc.join("\n") + "\n  ],";
+  if (ch.length) s += "\n  chests: [\n" + ch.join("\n") + "\n  ],";
+  if (tr.length) s += "\n  transitions: [\n" + tr.join("\n") + "\n  ],";
+  document.getElementById("exp").value = s;
+};
+document.getElementById("copy").onclick = async () => {
+  await navigator.clipboard.writeText(document.getElementById("exp").value);
+  alert("已复制");
+};
+blank(); listMarks(); draw();
+</script>
+</body>
+</html>

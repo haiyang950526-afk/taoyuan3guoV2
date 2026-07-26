@@ -25,7 +25,7 @@ MAPS["ch09n_village"] = {
     { x: 3, y: 2, text: "客", color: "#ffd166" },
     { x: 12, y: 2, text: "药", color: "#ffd166" },
   ],
-  // 左下民房为预留宝箱房：只放建筑，门口不放 transition（未来放宝箱用）
+  // 左下民房：原预留宝箱房，现已可进入（室内 ch09n_village_house_in，宝箱位预留）
   npcs: [
     { id: "vil1", x: 14, y: 9, color: "#9a8a6a", name: "村民",
       lines: ["赵太守降了刘使君，桂阳城总算不用打仗了。"] },
@@ -42,6 +42,8 @@ MAPS["ch09n_village"] = {
     // 客栈/药铺室内下钻（朝门才进，路过不触发）
     { x: 3, y: 5, face: [0, -1], to: { map: "ch09n_village_inn_in", x: 4, y: 4 } },
     { x: 12, y: 5, face: [0, -1], to: { map: "ch09n_village_item_in", x: 4, y: 4 } },
+    // 民房下钻（朝门才进，路过不触发）
+    { x: 3, y: 11, face: [0, -1], to: { map: "ch09n_village_house_in", x: 5, y: 6 } },
   ],
 };
 

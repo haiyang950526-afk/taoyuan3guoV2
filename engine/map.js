@@ -24,6 +24,8 @@ const TILE_META = {
   "X": { pass: false, name: "pillar" },
   "v": { pass: false, name: "well" },
   "h": { pass: true,  name: "village_in" },   // 村庄入口小图标（可走进）
+  "t": { pass: false, name: "table" },        // 桌子（两格拼一张，不可通行）
+  "c": { pass: true,  name: "chair" },        // 座椅（可通行）
 };
 
 // ---------------- 条件 / 文本 / 动作 ----------------
@@ -222,6 +224,39 @@ function draw() {
           tree(tx*TILE+9, ty*TILE+16, 9);    // 前左
           tree(tx*TILE+23, ty*TILE+16, 9);   // 前右
         }
+      }
+      else if (ch === "t") {
+        // 桌子（不可通行；相邻两格拼一张完整桌子，桌面无缝、桌腿只画在外侧）
+        ctx.fillStyle = "#9a7a52";
+        ctx.fillRect(tx * TILE, ty * TILE, TILE, TILE);
+        ctx.fillStyle = "#8a6a45";
+        ctx.fillRect(tx * TILE, ty * TILE + 26, TILE, 2);
+        const leftT = tileAt(c.x + tx - 1, c.y + ty) === "t";
+        const rightT = tileAt(c.x + tx + 1, c.y + ty) === "t";
+        ctx.fillStyle = "#8a5a2a";                          // 桌面
+        ctx.fillRect(tx * TILE, ty * TILE + 9, TILE, 12);
+        ctx.fillStyle = "#a8743a";                          // 桌面高光
+        ctx.fillRect(tx * TILE, ty * TILE + 9, TILE, 3);
+        ctx.fillStyle = "#5a3a1a";                          // 桌沿阴影
+        ctx.fillRect(tx * TILE, ty * TILE + 19, TILE, 2);
+        if (!leftT) ctx.fillRect(tx * TILE + 3, ty * TILE + 21, 3, 7);   // 左外腿
+        if (!rightT) ctx.fillRect(tx * TILE + 26, ty * TILE + 21, 3, 7); // 右外腿
+        if (!leftT) ctx.fillRect(tx * TILE, ty * TILE + 9, 2, 12);       // 左端沿
+        if (!rightT) ctx.fillRect(tx * TILE + 30, ty * TILE + 9, 2, 12); // 右端沿
+      }
+      else if (ch === "c") {
+        // 座椅（可通行；小圆凳，木地板底）
+        ctx.fillStyle = "#9a7a52";
+        ctx.fillRect(tx * TILE, ty * TILE, TILE, TILE);
+        ctx.fillStyle = "#8a6a45";
+        ctx.fillRect(tx * TILE, ty * TILE + 26, TILE, 2);
+        ctx.fillStyle = "#5a3a1a";                          // 凳腿
+        ctx.fillRect(tx*TILE+11, ty*TILE+20, 3, 6);
+        ctx.fillRect(tx*TILE+18, ty*TILE+20, 3, 6);
+        ctx.fillStyle = "#8a5a2a";                          // 凳面
+        ctx.beginPath(); ctx.roundRect(tx*TILE+8, ty*TILE+13, 16, 8, 3); ctx.fill();
+        ctx.fillStyle = "#a8743a";                          // 凳面高光
+        ctx.fillRect(tx*TILE+9, ty*TILE+14, 14, 2);
       }
       else if (ch === "v") {   // 井（图像；兜底灰块）
         const wimg = tileImg("tile_well");
