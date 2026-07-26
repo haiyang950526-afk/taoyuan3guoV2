@@ -61,6 +61,9 @@
   #panel-box button, #battle-cmd button, #scr-title-box button {
     display: block; width: 100%; margin-top: 8px; padding: 12px; font-size: 15px;
     border: 1px solid #3a4a78; border-radius: 10px; background: #24304f; color: #e8ecf4; }
+  /* 主菜单双列网格：一屏看全 */
+  #panel-body.menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  #panel-body.menu-grid button { margin-top: 0; padding: 12px 8px; }
   #panel-box button:active, #battle-cmd button:active { background: #31427a; }
   button.ghost { background: #1a2238 !important; color: #8a93a8 !important; }
 

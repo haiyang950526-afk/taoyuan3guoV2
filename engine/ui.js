@@ -53,6 +53,7 @@ function openPanel(title, build) {
   $("panel-title").textContent = title;
   const body = $("panel-body");
   body.innerHTML = "";
+  body.className = "";
   build(body);
   show("panel");
 }
@@ -523,11 +524,16 @@ function showDex() {
 function openMenu() {
   S.mode = "menu";
   openPanel("菜单", body => {
+    body.className = "menu-grid";   // 双列网格（样式见 index.html）
     body.appendChild(btn("状态", showStatus));
     body.appendChild(btn("装备", showEquip));
     body.appendChild(btn("道具", showItems));
     body.appendChild(btn("谋略", showSkills));
     body.appendChild(btn("任务", showQuest));
+    body.appendChild(btn("编成", () => {
+      if (!S.flags.sys_camp) { toast("编成所尚未开放（第五章起）"); return; }
+      openCamp();
+    }));
     body.appendChild(btn("图鉴", () => {
       if (!S.flags.sys_dex) { toast("图鉴尚未开放（第七章起）"); return; }
       showDex();
